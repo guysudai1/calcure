@@ -1,9 +1,13 @@
 """Module provides datatypes used in the program"""
 
+from asyncio.base_tasks import _task_get_stack
 import datetime
 import logging
+from operator import index
+from textwrap import indent
 import time
 import enum
+from typing import List
 
 from dateutil.rrule import rruleset, rrulestr
 from calcure.calendars import Calendar
@@ -44,7 +48,7 @@ class Frequency(enum.Enum):
 class Task:
     """Tasks created by the user"""
 
-    def __init__(self, item_id, name, status, timer, privacy, year=0, month=0, day=0, calendar_number=None):
+    def __init__(self, item_id, name, status, timer, privacy, parent_id, year=0, month=0, day=0, calendar_number=None):
         self.item_id = item_id
         self.name = name
         self.status = status
@@ -54,6 +58,8 @@ class Task:
         self.month = month
         self.day = day
         self.calendar_number = calendar_number
+        self.parent_id = parent_id
+        self.children: List[Task] = []
 
 
 class Event:
@@ -149,7 +155,7 @@ class Collection:
     """Parent class for collections of items like tasks or events"""
 
     def __init__(self):
-        self.items = []
+        self.items: List[Task] = []
         self.changed = False
 
     def add_item(self, item):
@@ -243,6 +249,74 @@ class Collection:
 class Tasks(Collection):
     """List of tasks created by the user"""
 
+    def __init__(self):
+        super().__init__()
+        self.task_tree: List[Task] = []
+
+    def delete_all_items(self):
+        self.task_tree.clear()
+        return super().delete_all_items()
+
+    @property
+    def ordered_tasks(self):
+        task_list = []
+
+        for task in self.task_tree:
+            task_list.append(task)
+            task_list.extend(self.flatten_children_ordered(task))
+
+        return task_list
+    
+    def delete_task(self, task_id, delete_children):
+        task_to_remove = self.get_task_by_id(task_id)
+        self._delete_task_from_parents(task_to_remove)        
+
+        for child_task in task_to_remove.children:
+            if not delete_children:
+                self.update_parent(child_task, task_to_remove.parent_id)
+            elif delete_children:
+                super().delete_item(child_task.item_id)
+
+        super().delete_item(task_to_remove.item_id)
+        
+    def _delete_task_from_parents(self, task: Task):
+        if task.parent_id == 0:
+            self.task_tree.remove(task)
+        else:
+            parent_task = self.get_task_by_id(task.parent_id)
+            parent_task.children.remove(task)
+            
+    def get_indent_count(self, task):
+        indent = 0
+        while task.parent_id != 0:
+            indent += 1
+            task = self.get_task_by_id(task.parent_id)
+    
+        return indent
+
+    def get_task_by_id(self, task_id):
+        for task in self.items:
+            if task.item_id == task_id:
+                return task 
+        raise ValueError()
+
+    def update_parent(self, item: Task, new_parent_id: int):
+        item.parent_id = new_parent_id
+        if item.parent_id == 0:
+            self.task_tree.append(item)
+        else:
+            parent_task = self.get_task_by_id(item.parent_id)
+            parent_task.children.append(item)
+
+    def add_item(self, item: Task):
+        if item.parent_id == 0:
+            self.task_tree.append(item)
+        else:
+            parent_task = self.get_task_by_id(item.parent_id)
+            parent_task.children.append(item)
+        
+        return super().add_item(item)
+
     @property
     def has_active_timer(self):
         for item in self.items:
@@ -250,13 +324,12 @@ class Tasks(Collection):
                 return True
         return False
 
-    def add_subtask(self, task, number):
+    def add_subtask(self, task_name, task_number):
         """Add a subtask for certain task in the journal"""
-        level = '----'if (self.items[number].name[:2] == '--') else '--'
-        task.name = level + task.name
-        if 100 > len(task.name) > 0:
-            self.items.insert(number+1, task)
-            self.changed = True
+        parent_item_id = self.items[task_number].item_id
+        child_task = Task(self.generate_id(), task_name,  Status.NORMAL, Timer([]), False, parent_id=parent_item_id)
+        self.add_item(child_task)
+        self.changed = True
 
     def add_timestamp_for_task(self, selected_task_id):
         """Add a timestamp to this task"""
@@ -291,25 +364,67 @@ class Tasks(Collection):
                 self.changed = True
                 break
 
-    def toggle_subtask_state(self, selected_task_id):
-        """Toggle the state of the task-subtask"""
-        for item in self.items:
-            if item.item_id == selected_task_id:
-                if item.name[:2] == '--':
-                    item.name = item.name[2:]
-                else:
-                    item.name = '--' + item.name
-                self.changed = True
+    def flatten_children_ordered(self, parent_task: Task):
+        """ This returns the task list ordered by which one will be displayed first """
+        flattened_list = []
+        nodes_to_go_over = parent_task.children.copy()
+        while nodes_to_go_over:
+            current_node = nodes_to_go_over.pop(0)
+            flattened_list.append(current_node)
+            nodes_to_go_over = current_node.children + nodes_to_go_over
 
-    def move_task(self, number_from, number_to):
+        return flattened_list
+
+    def get_all_subtasks_for_task(self, task_index, direct_subtask):
+        father_task = self.items[task_index]
+        subtasks = []
+        if direct_subtask:
+            subtasks = father_task.children
+        else:
+            subtasks = self.flatten_children_ordered(father_task)
+        
+        return subtasks
+
+    def is_index_subtask(self, main_task_index, possible_subtask_index, direct_subtask):
+        subtasks = self.get_all_subtasks_for_task(main_task_index, direct_subtask)
+
+        for subtask in subtasks:
+            subtask_index = self.items.index(subtask)
+            if possible_subtask_index == subtask_index:
+                return True
+        
+        return False
+
+    def move_task(self, index_from, index_to):
         """Move task from certain place to another in the list"""
-        self.items.insert(number_to, self.items.pop(number_from))
+
+        if index_from == index_to:
+            logging.error("Cannot move the task to itself")
+            return
+    
+        if self.is_index_subtask(index_to,index_from, direct_subtask=True):
+            logging.error("Cannot move direct subtask to its parent")
+            return
+
+        subtasks = self.get_all_subtasks_for_task(index_from, direct_subtask=False)
+    
+        old_item = self.items.pop(index_from)
+        if index_from < index_to:
+            index_to -= 1
+        
+        item_destination: Task = self.items[index_to]
+        old_item.indent = item_destination.indent + 1
+
+        self.items.insert(index_to + 1, old_item)
+
+        for subtask in subtasks:
+            subtask.indent -= 1
         self.changed = True
 
     def generate_id(self):
         """Generate a id for a new item. The id is generated as maximum of existing ids plus one"""
         if self.is_empty():
-            return 0
+            return 1
         return max([item.item_id for item in self.items]) + 1
 
 

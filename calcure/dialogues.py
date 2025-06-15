@@ -153,12 +153,14 @@ def input_frequency(stdscr, y, x, question):
     return None
 
 
-def ask_confirmation(stdscr, question, confirmations_enabled):
+def ask_confirmation(stdscr: curses.window, question, confirmations_enabled):
     """Ask user confirmation for an action"""
     if not confirmations_enabled:
         return True
     y_max, _ = stdscr.getmaxyx()
     curses.halfdelay(255)
+
+    clear_line(stdscr, y_max - 2)
     display_question(stdscr, y_max - 2, 0, question, Color.CONFIRMATIONS)
     key = stdscr.getkey()
     confirmed = (key == "y")

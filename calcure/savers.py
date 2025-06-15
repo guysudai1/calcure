@@ -28,7 +28,7 @@ class TaskSaverCSV:
                     year, month, day = task.year, task.month, task.day
 
                 dot = "."
-                f.write(f'{year},{month},{day},"{dot*task.privacy}{task.name}",{task.status.name.lower()}')
+                f.write(f'{year},{month},{day},"{dot*task.privacy}{task.name}",{task.status.name.lower()},{task.parent_id}')
                 for stamp in task.timer.stamps:
                     f.write(f',{str(stamp)}')
                 f.write("\n")

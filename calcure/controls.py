@@ -7,6 +7,7 @@ import importlib
 from calcure.data import *
 from calcure.dialogues import *
 from calcure.configuration import Config
+from calcure.screen import Screen
 
 cf = Config()
 
@@ -369,7 +370,7 @@ def control_daily_screen(stdscr, screen, user_events, importer):
 
 
 @safe_run
-def control_journal_screen(stdscr, screen, user_tasks, importer):
+def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
     """Process user input on the journal screen"""
     # If we previously selected a task, now we perform the action:
     if screen.selection_mode:
@@ -378,7 +379,7 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
         if screen.key == 't':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_ADD)
             if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+                task_id = user_tasks.ordered_tasks[number].item_id
                 if cf.ONE_TIMER_AT_A_TIME:
                     user_tasks.pause_all_other_timers(task_id)
                 user_tasks.add_timestamp_for_task(task_id)
@@ -410,12 +411,12 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
         if screen.key in ['i', 'h']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_HIGH)
             if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.IMPORTANT)
         if screen.key == 'l':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_LOW)
             if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.UNIMPORTANT)
         if screen.key == 'u':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_RES)
@@ -438,9 +439,10 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
         # Modify the task:
         if screen.key in ['x']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEL)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
-                user_tasks.delete_item(task_id)
+            if number is not None and user_tasks.is_valid_number(number):
+                delete_children_as_well = ask_confirmation(stdscr, "Delete all children too? (y/n)", True)
+                task: Task = user_tasks.ordered_tasks[number]
+                user_tasks.delete_task(task.item_id, delete_children_as_well)
         if screen.key == 'm':
             number_from = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE)
             if user_tasks.is_valid_number(number_from):
@@ -457,17 +459,18 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
 
         # Subtask operations:
         if screen.key == 's':
-            number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_TOG)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
-                user_tasks.toggle_subtask_state(task_id)
+            number_from = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE)
+            if user_tasks.is_valid_number(number_from):
+                clear_line(stdscr, screen.y_max-2)
+                number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
+                user_tasks.move_task(number_from, number_to)
         if screen.key == 'A':
-            number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_SUB)
-            if user_tasks.is_valid_number(number):
+            task_number: int|None = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_SUB)
+            if task_number is not None and user_tasks.is_valid_number(task_number):
                 clear_line(stdscr, screen.y_max-2, 0)
                 task_name = input_string(stdscr, screen.y_max-2, 0, MSG_TS_TITLE, screen.x_max-len(MSG_TS_TITLE)-2)
-                task_id = user_tasks.generate_id()
-                user_tasks.add_subtask(Task(task_id, task_name, Status.NORMAL, Timer([]), False), number)
+                if task_name:
+                    user_tasks.add_subtask(task_name, task_number)
         screen.selection_mode = False
 
     # Otherwise, we check for user input:
@@ -485,7 +488,7 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
             clear_line(stdscr, len(user_tasks.items) + 2, screen.x_min)
             task_name = input_string(stdscr, len(user_tasks.items) + 2, screen.x_min, cf.TODO_ICON+' ', screen.x_max - 4)
             task_id = user_tasks.generate_id()
-            user_tasks.add_item(Task(task_id, task_name, Status.NORMAL, Timer([]), False))
+            user_tasks.add_item(Task(task_id, task_name, Status.NORMAL, Timer([]), False, parent_id=0))
 
         # Bulk operations:
         if screen.key in ["V", "D"]:
@@ -509,6 +512,11 @@ def control_journal_screen(stdscr, screen, user_tasks, importer):
             if confirmed:
                 user_tasks.delete_all_items()
 
+        if screen.key in ["KEY_DOWN"]:
+            screen.change_offset_forwards(step_count=1)
+        elif screen.key in ["KEY_UP"]:
+            screen.change_offset_backwards(step_count=1)
+            
         # Imports:
         if screen.key == "C":
             confirmed = ask_confirmation(stdscr, MSG_TS_IM, cf.ASK_CONFIRMATIONS)

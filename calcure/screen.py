@@ -27,6 +27,7 @@ class Screen:
         self.year = self.today.year
         self.reload_interval = cf.DATA_RELOAD_INTERVAL
         self.last_data_reload_time = datetime.datetime.now()
+        self.offset = 0
 
     @property
     def is_active_pane(self):
@@ -66,6 +67,12 @@ class Screen:
         if self.split and self.currently_drawn == AppState.JOURNAL:
             return x_max - self.journal_pane_width + 2
         return 0
+
+    def change_offset_forwards(self, step_count: int):
+        self.offset += step_count
+
+    def change_offset_backwards(self, step_count: int):
+        self.offset = max(0, self.offset - step_count)
 
     @property
     def date(self) -> datetime:

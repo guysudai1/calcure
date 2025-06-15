@@ -53,7 +53,7 @@ class Config:
                 "calcurse_events_file":      self.shorten_path(self.calcurse_events_file),
                 "log_file":                  self.shorten_path(self.log_file),
                 "language":                  "en",
-                "default_view":              "calendar",
+                "default_view":              "journal",
                 "default_calendar_view":     "monthly",
                 "birthdays_from_abook":      "Yes",
                 "show_keybindings":          "Yes",
@@ -80,7 +80,7 @@ class Config:
                 "weekend_days":              "6,7",
                 "refresh_interval":          "1",
                 "data_reload_interval":      "0",
-                "split_screen":              "Yes",
+                "split_screen":              "No",
                 "right_pane_percentage":     "25",
                 "journal_header":            "JOURNAL",
                 "event_icon":                "•",
@@ -201,7 +201,7 @@ class Config:
             conf.read(self.config_file, 'utf-8')
 
             # Reading default view:
-            default_view = conf.get("Parameters", "default_view", fallback="calendar")
+            default_view = conf.get("Parameters", "default_view", fallback="journal")
             if default_view == 'journal':
                 self.DEFAULT_VIEW = AppState.JOURNAL
             else:
@@ -221,7 +221,7 @@ class Config:
             self.PRIVACY_MODE              = conf.getboolean("Parameters", "privacy_mode", fallback=False)
             self.CUT_TITLES                = conf.getboolean("Parameters", "cut_titles_by_cell_length", fallback=False)
             self.BIRTHDAYS_FROM_ABOOK      = conf.getboolean("Parameters", "birthdays_from_abook", fallback=True)
-            self.SPLIT_SCREEN              = conf.getboolean("Parameters", "split_screen", fallback=True)
+            self.SPLIT_SCREEN              = conf.getboolean("Parameters", "split_screen", fallback=False)
             self.SHOW_NOTHING_PLANNED      = conf.getboolean("Parameters", "show_nothing_planned", fallback=True)
             self.SHOW_CALENDAR_BORDERS     = conf.getboolean("Parameters", "show_calendar_borders", fallback=False)
             self.SHOW_MOON_PHASES          = conf.getboolean("Parameters", "show_moon_phases", fallback=False)

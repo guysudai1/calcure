@@ -87,11 +87,12 @@ class TaskLoaderCSV(LoaderCSV):
                 name = row[0 + shift]
                 is_private = False
             status = Status[row[1 + shift].upper()]
-            stamps = row[(2 + shift):] if len(row) > 2 else []
+            parent_id = int(row[2 + shift])
+            stamps = row[(3 + shift):] if len(row) > 3 else []
             timer = Timer(stamps)
 
             # Add task:
-            new_task = Task(task_id, name, status, timer, is_private, year, month, day)
+            new_task = Task(task_id, name, status, timer, is_private, parent_id, year, month, day)
             self.user_tasks.add_item(new_task)
         self.user_tasks.changed = False
         return self.user_tasks

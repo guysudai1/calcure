@@ -97,7 +97,6 @@ class View:
         y_max, x_max = self.stdscr.getmaxyx()
         if y >= y_max or x >= x_max:
             return
-
         # Cut the text if it does not fit the screen:
         real_text = text.replace('\u0336', "")
         number_of_characters = len(real_text)
@@ -123,10 +122,11 @@ class View:
 class TaskView(View):
     """Display a single task"""
 
-    def __init__(self, stdscr, y, x, task, screen):
+    def __init__(self, stdscr, y, x, task: Task, screen, indent: int):
         super().__init__(stdscr, y, x)
         self.task = task
         self.screen = screen
+        self.task_indent = indent
 
     @property
     def color(self):
@@ -154,18 +154,9 @@ class TaskView(View):
         return icon
 
     @property
-    def indent(self):
-        """Calculate the left indentation depending on the task level"""
-        if self.task.name[:4] == '----':
-            return 4
-        if self.task.name[:2] == '--':
-            return 2
-        return 0
-
-    @property
     def info(self):
         """Icon and name of the task, which is decorated if needed"""
-        name = self.task.name[self.indent:]
+        name = self.task.name
         if self.screen.privacy or self.task.privacy:
             return f'{cf.TODO_ICON} {cf.PRIVACY_ICON * len(name)}'
         if self.task.status == Status.DONE and cf.STRIKETHROUGH_DONE:
@@ -175,9 +166,9 @@ class TaskView(View):
 
     def render(self):
         """Render a line with an icon, task, deadline, and timer"""
-        self.display_line(self.y, self.x + self.indent, self.info, self.color)
+        self.display_line(self.y, self.x + self.task_indent, self.info, self.color)
 
-        deadline_indentation = self.screen.x_min + 2 + len(self.info) + self.indent
+        deadline_indentation = self.screen.x_min + 2 + len(self.info) + self.task_indent
         deadline_view = TaskDeadlineView(self.stdscr, self.y, deadline_indentation, self.task)
         deadline_view.render()
 
@@ -228,28 +219,40 @@ class TimerView(View):
 class JournalView(View):
     """Displays a list of all tasks"""
 
-    def __init__(self, stdscr, y, x, user_tasks, user_ics_tasks, screen):
+    def __init__(self, stdscr, y, x, user_tasks: Tasks, user_ics_tasks, screen):
         super().__init__(stdscr, y, x)
         self.user_tasks = user_tasks
         self.user_ics_tasks = user_ics_tasks
         self.screen = screen
 
+
     def render(self):
         """Render the list of tasks"""
-        if not self.user_tasks.items and not self.user_ics_tasks.items and cf.SHOW_NOTHING_PLANNED:
+        if self.y == 0:
+            self.y += 1
+
+        all_tasks = self.user_tasks.ordered_tasks
+
+        if not all_tasks and not self.user_ics_tasks.items and cf.SHOW_NOTHING_PLANNED:
             self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.UNIMPORTANT)
-        for index, task in enumerate(self.user_tasks.items):
-            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen)
+        
+        relevant_task_list = all_tasks[self.screen.offset:]
+        self.display_line(self.y - 1, self.x, color=Color.TITLE, bold=True,
+                          text=f"# Tasks displayed: {len(relevant_task_list)}/{len(all_tasks)}. Offset: {self.screen.offset}")
+        for index, task in enumerate(relevant_task_list, start=self.screen.offset):
+            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen, indent=self.user_tasks.get_indent_count(task))
             task_view.render()
             if self.screen.selection_mode and self.screen.state == AppState.JOURNAL:
                 self.display_line(self.y, self.x, str(index + 1), Color.ACTIVE_PANE)
             self.y += 1
 
         self.y += 1
-        for index, task in enumerate(self.user_ics_tasks.items):
-            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen)
-            task_view.render()
-            self.y += 1
+        # for index, task in enumerate(self.user_ics_tasks.items):
+        #     task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen)
+        #     task_view.render()
+        #     self.y += 1
+
+        
 
 
 class EventView(View):
@@ -388,7 +391,7 @@ class DeadlineView(EventView):
 
     def __init__(self, stdscr, y, x, event, screen):
         super().__init__(stdscr, y, x, event, screen)
-        self.info = f"{self.icon} {self.event.name[self.indent:]}"
+        self.info = f"{self.icon} {self.event.name}"
 
     @property
     def icon(self):
@@ -615,7 +618,10 @@ class ErrorView(View):
 
             # Depending on error type, display different messages:
             if self.error.number_of_errors > 1 or "ERROR" in self.error.type:
-                self.display_line(self.screen.y_max - 2, 0, MSG_ERRORS, Color.IMPORTANT)
+                if self.error.number_of_errors == 1:
+                    self.display_line(self.screen.y_max - 2, 0, self.error.text, Color.IMPORTANT)
+                else:
+                    self.display_line(self.screen.y_max - 2, 0, MSG_ERRORS, Color.IMPORTANT)
             else:
                 self.display_line(self.screen.y_max - 2, 0, MSG_INPUT, Color.HINTS)
 
