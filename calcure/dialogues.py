@@ -46,6 +46,11 @@ def input_field(stdscr, y, x, field_length):
     input_str = ""
     cursor_pos = 0
 
+    curses.cbreak()
+    stdscr.timeout(-1)
+    stdscr.nodelay(False)
+    stdscr.notimeout(True)
+
     while True:
         stdscr.move(y, x + cursor_pos)
         key = stdscr.get_wch()
