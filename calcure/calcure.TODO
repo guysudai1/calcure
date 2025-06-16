@@ -1,0 +1,21 @@
+✔ Scroll up/down @done(25-06-16 13:54)
+    ✔ UP @done(25-06-15 15:29)
+    ✔ DOWN @done(25-06-15 15:29)
+    ✔ PGUP @done(25-06-16 13:54)
+    ✔ PGDOWN @done(25-06-16 13:54)
+✔ Implement task groups @done(25-06-16 13:52)
+    ✔ basic task functions @started(25-06-15 17:36) @done(25-06-16 13:52) @lasted(20h16m43s)
+    ✔ delete task groups @started(25-06-15 15:38) @done(25-06-15 17:36) @lasted(1h58m38s)
+    ✔ move task groups @started(25-06-15 15:38) @done(25-06-15 17:36) @lasted(1h58m38s)
+✔ Swap between elements @done(25-06-16 13:54)
+☐ Add subtasks for a mission
+☐ Importance levels
+☐ Filter by importance levels
+☐ Better icons (only beginning with @)
+☐ Searching
+☐ Tagging
+☐ Status of mission (badge)
+☐ Expanding extra information for missions
+☐ Shared missions, sync across different clients
+☐ Archive missions (create new archive view)
+☐ Remove calendar from default view
