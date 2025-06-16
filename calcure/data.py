@@ -61,6 +61,24 @@ class Task:
         self.parent_id = parent_id
         self.children: List[Task] = []
 
+    def __eq__(self, other):
+        return self.item_id == other.item_id
+
+class RootTask:
+    """
+    This is a fake item to use as the root of all other tasks
+    """
+    def __init__(self, task_tree: List[Task]) -> None:
+        self.item_id = 0
+        self.name = "FAKE ROOT ITEM"
+        self.children = task_tree  # Reference to the task tree
+
+    @property 
+    def parent_id(self):
+        raise Exception("Root task has no parent id")
+    
+    def __eq__(self, other):
+        return self.item_id == other.item_id
 
 class Event:
     """Parent class of all events"""
@@ -252,6 +270,7 @@ class Tasks(Collection):
     def __init__(self):
         super().__init__()
         self.task_tree: List[Task] = []
+        self._root_task = RootTask(self.task_tree)
 
     def delete_all_items(self):
         self.task_tree.clear()
@@ -268,24 +287,26 @@ class Tasks(Collection):
         return task_list
     
     def delete_task(self, task_id, delete_children):
+        assert task_id != 0, "Cannot delete root task"
+
         task_to_remove = self.get_task_by_id(task_id)
         self._delete_task_from_parents(task_to_remove)        
 
         for child_task in task_to_remove.children:
             if not delete_children:
-                self.update_parent(child_task, task_to_remove.parent_id)
+                self.update_parent(child_task, task_to_remove.parent_id, delete_from_parent=False)
             elif delete_children:
                 super().delete_item(child_task.item_id)
 
         super().delete_item(task_to_remove.item_id)
+
+        self.changed = True
         
     def _delete_task_from_parents(self, task: Task):
-        if task.parent_id == 0:
-            self.task_tree.remove(task)
-        else:
-            parent_task = self.get_task_by_id(task.parent_id)
-            parent_task.children.remove(task)
-            
+        parent_task = self.get_task_by_id(task.parent_id)
+        parent_task.children.remove(task)
+        self.changed = True
+
     def get_indent_count(self, task):
         indent = 0
         while task.parent_id != 0:
@@ -295,26 +316,28 @@ class Tasks(Collection):
         return indent
 
     def get_task_by_id(self, task_id):
+        if task_id == 0:
+            return self._root_task
+
         for task in self.items:
             if task.item_id == task_id:
                 return task 
         raise ValueError()
 
-    def update_parent(self, item: Task, new_parent_id: int):
+    def update_parent(self, item: Task, new_parent_id: int, delete_from_parent: bool):
+        if delete_from_parent:
+            self._delete_task_from_parents(item)
+
         item.parent_id = new_parent_id
-        if item.parent_id == 0:
-            self.task_tree.append(item)
-        else:
-            parent_task = self.get_task_by_id(item.parent_id)
-            parent_task.children.append(item)
+        parent_task = self.get_task_by_id(item.parent_id)
+        parent_task.children.append(item)
+        self.changed = True
 
     def add_item(self, item: Task):
-        if item.parent_id == 0:
-            self.task_tree.append(item)
-        else:
-            parent_task = self.get_task_by_id(item.parent_id)
-            parent_task.children.append(item)
-        
+        parent_task = self.get_task_by_id(item.parent_id)
+        parent_task.children.append(item)
+        self.changed = True
+
         return super().add_item(item)
 
     @property
@@ -326,7 +349,7 @@ class Tasks(Collection):
 
     def add_subtask(self, task_name, task_number):
         """Add a subtask for certain task in the journal"""
-        parent_item_id = self.items[task_number].item_id
+        parent_item_id = self.ordered_tasks[task_number].item_id
         child_task = Task(self.generate_id(), task_name,  Status.NORMAL, Timer([]), False, parent_id=parent_item_id)
         self.add_item(child_task)
         self.changed = True
@@ -375,8 +398,7 @@ class Tasks(Collection):
 
         return flattened_list
 
-    def get_all_subtasks_for_task(self, task_index, direct_subtask):
-        father_task = self.items[task_index]
+    def get_all_subtasks_for_task(self, father_task: Task, direct_subtask: bool):
         subtasks = []
         if direct_subtask:
             subtasks = father_task.children
@@ -385,40 +407,43 @@ class Tasks(Collection):
         
         return subtasks
 
-    def is_index_subtask(self, main_task_index, possible_subtask_index, direct_subtask):
-        subtasks = self.get_all_subtasks_for_task(main_task_index, direct_subtask)
+    def is_task_child_of_other_task(self, parent_task: Task, possible_child_task: Task, direct_subtask):
+        subtasks = self.get_all_subtasks_for_task(parent_task, direct_subtask)
 
-        for subtask in subtasks:
-            subtask_index = self.items.index(subtask)
-            if possible_subtask_index == subtask_index:
-                return True
+        return possible_child_task in subtasks
+
+    def swap_task(self, src_task: Task, dst_task: Task):
+        # Get parents for both tasks
+        src_task_parent = self.get_task_by_id(src_task.parent_id)
+        dst_task_parent = self.get_task_by_id(dst_task.parent_id)
+
+        src_task_index_in_parent = src_task_parent.children.index(src_task)
+        dst_task_index_in_parent = dst_task_parent.children.index(dst_task)
         
-        return False
+        src_task_parent.children[src_task_index_in_parent] = dst_task
+        dst_task_parent.children[dst_task_index_in_parent] = src_task
 
-    def move_task(self, index_from, index_to):
+        src_task.parent_id = dst_task_parent.item_id
+        dst_task.parent_id = src_task_parent.item_id
+        self.changed = True
+
+    def move_task(self, src_task: Task, dest_task: Task):
         """Move task from certain place to another in the list"""
 
-        if index_from == index_to:
+        if src_task == dest_task:
             logging.error("Cannot move the task to itself")
             return
     
-        if self.is_index_subtask(index_to,index_from, direct_subtask=True):
+        if self.is_task_child_of_other_task(dest_task, src_task, direct_subtask=True):
             logging.error("Cannot move direct subtask to its parent")
             return
 
-        subtasks = self.get_all_subtasks_for_task(index_from, direct_subtask=False)
+        if self.is_task_child_of_other_task(src_task, dest_task, direct_subtask=False):
+            logging.error("Cannot move parent to its child")
+            return
     
-        old_item = self.items.pop(index_from)
-        if index_from < index_to:
-            index_to -= 1
+        self.update_parent(src_task, dest_task.item_id, delete_from_parent=True)
         
-        item_destination: Task = self.items[index_to]
-        old_item.indent = item_destination.indent + 1
-
-        self.items.insert(index_to + 1, old_item)
-
-        for subtask in subtasks:
-            subtask.indent -= 1
         self.changed = True
 
     def generate_id(self):

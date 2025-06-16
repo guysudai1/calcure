@@ -60,8 +60,7 @@ class TaskLoaderCSV(LoaderCSV):
         self.user_tasks.delete_all_items()
         lines = self.read_file(self.tasks_file)
 
-        for index, row in enumerate(lines):
-            task_id = index
+        for row in lines:
 
             # Read task dates:
             if self.is_task_format_old:
@@ -88,7 +87,8 @@ class TaskLoaderCSV(LoaderCSV):
                 is_private = False
             status = Status[row[1 + shift].upper()]
             parent_id = int(row[2 + shift])
-            stamps = row[(3 + shift):] if len(row) > 3 else []
+            task_id = int(row[3 + shift])
+            stamps = row[(4 + shift):] if len(row) > 4 else []
             timer = Timer(stamps)
 
             # Add task:

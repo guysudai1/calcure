@@ -378,7 +378,7 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
         # Timer operations:
         if screen.key == 't':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_ADD)
-            if user_tasks.is_valid_number(number):
+            if number is not None and user_tasks.is_valid_number(number):
                 task_id = user_tasks.ordered_tasks[number].item_id
                 if cf.ONE_TIMER_AT_A_TIME:
                     user_tasks.pause_all_other_timers(task_id)
@@ -386,15 +386,15 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
 
         if screen.key == 'T':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_RESET)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.reset_timer_for_task(task_id)
 
         # Add deadline:
         if screen.key == "f":
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_ADD)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 clear_line(stdscr, screen.y_max-2, 0)
                 year, month, day = input_date(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_DATE)
                 if screen.is_valid_date(year, month, day):
@@ -403,37 +403,37 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
         # Remove deadline:
         if screen.key == "F":
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_DEL)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.change_deadline(task_id, 0, 0, 0)
 
         # Change the status:
         if screen.key in ['i', 'h']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_HIGH)
-            if user_tasks.is_valid_number(number):
+            if number is not None and user_tasks.is_valid_number(number):
                 task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.IMPORTANT)
         if screen.key == 'l':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_LOW)
-            if user_tasks.is_valid_number(number):
+            if number is not None and user_tasks.is_valid_number(number):
                 task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.UNIMPORTANT)
         if screen.key == 'u':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_RES)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.NORMAL)
         if screen.key in ['d', 'v']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DONE)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_status(task_id, Status.DONE)
 
         # Toggle task privacy:
         if screen.key == '.':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_PRIVACY)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 user_tasks.toggle_item_privacy(task_id)
 
         # Modify the task:
@@ -445,14 +445,19 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
                 user_tasks.delete_task(task.item_id, delete_children_as_well)
         if screen.key == 'm':
             number_from = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE)
-            if user_tasks.is_valid_number(number_from):
+            if number_from is not None and user_tasks.is_valid_number(number_from):
                 clear_line(stdscr, screen.y_max-2)
                 number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
-                user_tasks.move_task(number_from, number_to)
+
+                if number_to is not None and user_tasks.is_valid_number(number_to):
+                    src_task: Task = user_tasks.ordered_tasks[number_from]
+                    dest_task: Task = user_tasks.ordered_tasks[number_to]
+
+                    user_tasks.move_task(src_task, dest_task)
         if screen.key in ['e', 'r']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_EDIT)
-            if user_tasks.is_valid_number(number):
-                task_id = user_tasks.items[number].item_id
+            if number is not None and user_tasks.is_valid_number(number):
+                task_id = user_tasks.ordered_tasks[number].item_id
                 clear_line(stdscr, number+2, screen.x_min)
                 new_name = input_string(stdscr, number+2, screen.x_min, cf.TODO_ICON+' ', screen.x_max-4)
                 user_tasks.rename_item(task_id, new_name)
@@ -460,10 +465,14 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
         # Subtask operations:
         if screen.key == 's':
             number_from = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE)
-            if user_tasks.is_valid_number(number_from):
+            if number_from is not None and user_tasks.is_valid_number(number_from):
                 clear_line(stdscr, screen.y_max-2)
                 number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
-                user_tasks.move_task(number_from, number_to)
+
+                if number_to is not None and user_tasks.is_valid_number(number_to):
+                    src_task: Task = user_tasks.ordered_tasks[number_from]
+                    dest_task: Task = user_tasks.ordered_tasks[number_to]
+                    user_tasks.swap_task(src_task, dest_task)
         if screen.key == 'A':
             task_number: int|None = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_SUB)
             if task_number is not None and user_tasks.is_valid_number(task_number):

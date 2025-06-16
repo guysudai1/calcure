@@ -19,8 +19,7 @@ class TaskSaverCSV:
         original_file = self.tasks_file
         dummy_file = Path(f"{self.tasks_file}.bak")
         with open(dummy_file, "w", encoding="utf-8") as f:
-            for task in self.user_tasks.items:
-
+            for task in self.user_tasks.ordered_tasks:
                 # If persian calendar was used, we convert event back to Gregorian for storage:
                 if self.use_persian_calendar and task.year != 0:
                     year, month, day = convert_to_gregorian_date(task.year, task.month, task.day)
@@ -28,7 +27,7 @@ class TaskSaverCSV:
                     year, month, day = task.year, task.month, task.day
 
                 dot = "."
-                f.write(f'{year},{month},{day},"{dot*task.privacy}{task.name}",{task.status.name.lower()},{task.parent_id}')
+                f.write(f'{year},{month},{day},"{dot*task.privacy}{task.name}",{task.status.name.lower()},{task.parent_id},{task.item_id}')
                 for stamp in task.timer.stamps:
                     f.write(f',{str(stamp)}')
                 f.write("\n")
