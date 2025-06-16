@@ -377,11 +377,18 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
     # If we previously selected a task, now we perform the action:
     if screen.selection_mode:
 
+        # Collapse/Expand
+        if screen.key == 'c':
+            number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_ADD)
+            if number is not None and user_tasks.is_valid_number(number):
+                task = user_tasks.viewed_ordered_tasks[number]
+                user_tasks.toggle_task_collapse(task)
+        
         # Timer operations:
         if screen.key == 't':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_ADD)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 if cf.ONE_TIMER_AT_A_TIME:
                     user_tasks.pause_all_other_timers(task)
                 user_tasks.add_timestamp_for_task(task)
@@ -389,14 +396,14 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
         if screen.key == 'T':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_RESET)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.reset_timer_for_task(task)
 
         # Add deadline:
         if screen.key == "f":
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_ADD)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 clear_line(stdscr, screen.y_max-2, 0)
                 year, month, day = input_date(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_DATE)
                 if screen.is_valid_date(year, month, day):
@@ -406,43 +413,43 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
         if screen.key == "F":
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEAD_DEL)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.change_deadline(task, 0, 0, 0)
 
         # Change the status:
         if screen.key in ['i', 'h']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_HIGH)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_item_status(task, Status.IMPORTANT)
         if screen.key == 'l':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_LOW)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_item_status(task, Status.UNIMPORTANT)
         if screen.key == 'u':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_RES)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_item_status(task, Status.NORMAL)
         if screen.key in ['d', 'v']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DONE)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_item_status(task, Status.DONE)
 
         # Toggle task privacy:
         if screen.key == '.':
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_PRIVACY)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_item_privacy(task)
 
         # Modify the task:
         if screen.key in ['x']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_DEL)
             if number is not None and user_tasks.is_valid_number(number):
-                task: Task = user_tasks.ordered_tasks[number]
+                task: Task = user_tasks.viewed_ordered_tasks[number]
                 if task.children:
                     delete_children_as_well = ask_confirmation(stdscr, "Delete all children too? (y/n)", True)
                 else:
@@ -456,15 +463,15 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
                 number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
 
                 if number_to is not None and user_tasks.is_valid_number(number_to):
-                    src_task: Task = user_tasks.ordered_tasks[number_from]
-                    dest_task: Task = user_tasks.ordered_tasks[number_to]
+                    src_task: Task = user_tasks.viewed_ordered_tasks[number_from]
+                    dest_task: Task = user_tasks.viewed_ordered_tasks[number_to]
 
                     user_tasks.move_task(src_task, dest_task)
 
         if screen.key in ['e', 'r']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_EDIT)
             if number is not None and user_tasks.is_valid_number(number):
-                task = user_tasks.ordered_tasks[number]
+                task = user_tasks.viewed_ordered_tasks[number]
 
                 number_relative_to_offset = number + 2 - screen.offset 
                 clear_line(stdscr, number_relative_to_offset, screen.x_min)
@@ -480,8 +487,8 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
                 number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
 
                 if number_to is not None and user_tasks.is_valid_number(number_to):
-                    src_task: Task = user_tasks.ordered_tasks[number_from]
-                    dest_task: Task = user_tasks.ordered_tasks[number_to]
+                    src_task: Task = user_tasks.viewed_ordered_tasks[number_from]
+                    dest_task: Task = user_tasks.viewed_ordered_tasks[number_to]
                     user_tasks.swap_task(src_task, dest_task)
 
         if screen.key == 'A':
@@ -490,7 +497,8 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
                 clear_line(stdscr, screen.y_max-2, 0)
                 task_name = input_string(stdscr, screen.y_max-2, 0, MSG_TS_TITLE, screen.x_max-len(MSG_TS_TITLE)-2)
                 if task_name:
-                    user_tasks.add_subtask(task_name, task_number)
+                    parent_task: Task = user_tasks.viewed_ordered_tasks[task_number]
+                    user_tasks.add_subtask(task_name, parent_task)
 
         screen.selection_mode = False
 
@@ -502,7 +510,7 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
 
         # If we need to select a task, change to selection mode:
         selection_keys = ['t', 'T', 'h', 'l', 'v', 'u', 'i', 's', 'd', 'x', 'e', 'r', 'c', 'A', 'm', '.', 'f', 'F']
-        if screen.key in selection_keys and user_tasks.ordered_tasks:
+        if screen.key in selection_keys and user_tasks.viewed_ordered_tasks:
             screen.selection_mode = True
 
         # Add single task:
@@ -511,11 +519,11 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks, importer):
                 # We delayed the action to move the offset
                 screen.delayed_action = False
 
-            amount_of_elements_on_screen = len(user_tasks.ordered_tasks[screen.offset:])
+            amount_of_elements_on_screen = len(user_tasks.viewed_ordered_tasks[screen.offset:])
             if amount_of_elements_on_screen >= screen.y_max - HEADER_FIELD_COUNT - 1:
                 # This means that we have more elements on the screen and we are at the edge
                 amount_of_elements_on_screen = 5
-                screen.offset = len(user_tasks.ordered_tasks) - amount_of_elements_on_screen
+                screen.offset = len(user_tasks.viewed_ordered_tasks) - amount_of_elements_on_screen
                 screen.refresh_now = True
                 screen.delayed_action = True
                 return

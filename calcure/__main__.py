@@ -123,6 +123,7 @@ class TaskView(View):
             for keyword in cf.ICONS:
                 if keyword in self.task.name.lower():
                     icon = cf.ICONS[keyword]
+
         if self.task.status == Status.DONE:
             icon = cf.DONE_ICON
         if self.task.status == Status.IMPORTANT:
@@ -135,10 +136,17 @@ class TaskView(View):
         name = self.task.name
         if self.screen.privacy or self.task.privacy:
             return f'{cf.TODO_ICON} {cf.PRIVACY_ICON * len(name)}'
+
         if self.task.status == Status.DONE and cf.STRIKETHROUGH_DONE:
             strike = "\u0336"
-            return f'{self.icon} {strike}{strike.join(name)}{strike}'
-        return f'{self.icon} {name}'
+            info_str = f'{self.icon} {strike}{strike.join(name)}{strike}'
+        else:
+            info_str = f'{self.icon} {name}'
+
+        if self.task.collapse:
+            info_str += f" {cf.COLLAPSED_ICON}"
+
+        return info_str
 
     def render(self):
         """Render a line with an icon, task, deadline, and timer"""
@@ -207,9 +215,9 @@ class JournalView(View):
         if self.y == 0:
             self.y += 1
 
-        all_tasks = self.user_tasks.ordered_tasks
+        all_tasks = self.user_tasks.viewed_ordered_tasks
 
-        if not all_tasks and not self.user_ics_tasks.ordered_tasks and cf.SHOW_NOTHING_PLANNED:
+        if not all_tasks and not self.user_ics_tasks.viewed_ordered_tasks and cf.SHOW_NOTHING_PLANNED:
             self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.UNIMPORTANT)
         
         relevant_task_list = all_tasks[self.screen.offset:]

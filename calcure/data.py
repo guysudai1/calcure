@@ -48,7 +48,7 @@ class Frequency(enum.Enum):
 class Task:
     """Tasks created by the user"""
 
-    def __init__(self, item_id, name, status, timer, privacy, parent_id, year=0, month=0, day=0, calendar_number=None):
+    def __init__(self, item_id, name, status, timer, privacy, parent_id, collapse=False, year=0, month=0, day=0, calendar_number=None):
         self.item_id = item_id
         self.name = name
         self.status = status
@@ -60,6 +60,7 @@ class Task:
         self.calendar_number = calendar_number
         self.parent_id = parent_id
         self.children: List[Task] = []
+        self.collapse = collapse
 
     def __eq__(self, other):
         return self.item_id == other.item_id
@@ -274,19 +275,27 @@ class Tasks:
     def delete_all_items(self):
         self.task_tree.clear()
 
-    @property
-    def ordered_tasks(self):
+    def _get_ordered_tasks(self, hide_collapsed: bool):
         task_list = []
 
         for task in self.task_tree:
             task_list.append(task)
-            task_list.extend(self.flatten_children_ordered(task))
+            if not hide_collapsed or not task.collapse:
+                task_list.extend(self.flatten_children_ordered(task, hide_collapsed=True))
 
         return task_list
+
+    @property
+    def all_ordered_tasks(self):
+        return self._get_ordered_tasks(hide_collapsed=False)
+
+    @property
+    def viewed_ordered_tasks(self):
+        return self._get_ordered_tasks(hide_collapsed=True)
     
     def is_valid_number(self, number: int):
         """Check if input is valid and corresponds to an item"""
-        return 0 <= number < len(self.ordered_tasks)
+        return 0 <= number < len(self.all_ordered_tasks)
 
     def toggle_item_status(self, task: Task, new_status):
         """Toggle the status for the item with provided id"""
@@ -294,6 +303,11 @@ class Tasks:
             task.status = Status.NORMAL
         else:
             task.status = new_status
+        self.changed = True
+
+    def toggle_task_collapse(self, task: Task):
+        """Toggle the collapse for the task"""
+        task.collapse = not task.collapse
         self.changed = True
 
     def toggle_item_privacy(self, task):
@@ -337,7 +351,7 @@ class Tasks:
         if task_id == 0:
             return self._root_task
 
-        for task in self.ordered_tasks:
+        for task in self.all_ordered_tasks:
             if task.item_id == task_id:
                 return task 
         raise ValueError()
@@ -358,15 +372,14 @@ class Tasks:
 
     @property
     def has_active_timer(self):
-        for item in self.ordered_tasks:
+        for item in self.all_ordered_tasks:
             if item.timer.is_counting:
                 return True
         return False
 
-    def add_subtask(self, task_name, task_number):
+    def add_subtask(self, task_name, parent_task: Task):
         """Add a subtask for certain task in the journal"""
-        parent_item_id = self.ordered_tasks[task_number].item_id
-        child_task = Task(self.generate_id(), task_name,  Status.NORMAL, Timer([]), False, parent_id=parent_item_id)
+        child_task = Task(self.generate_id(), task_name,  Status.NORMAL, Timer([]), False, parent_id=parent_task.item_id)
         self.add_item(child_task)
         self.changed = True
 
@@ -393,14 +406,15 @@ class Tasks:
         task.day = new_day
         self.changed = True
 
-    def flatten_children_ordered(self, parent_task: Task):
+    def flatten_children_ordered(self, parent_task: Task, hide_collapsed: bool = False):
         """ This returns the task list ordered by which one will be displayed first """
         flattened_list = []
         nodes_to_go_over = parent_task.children.copy()
         while nodes_to_go_over:
             current_node = nodes_to_go_over.pop(0)
             flattened_list.append(current_node)
-            nodes_to_go_over = current_node.children + nodes_to_go_over
+            if not hide_collapsed or not current_node.collapse:
+                nodes_to_go_over = current_node.children + nodes_to_go_over
 
         return flattened_list
 
@@ -453,13 +467,13 @@ class Tasks:
         self.changed = True
 
     def is_empty(self):
-        return len(self.ordered_tasks) == 0
+        return len(self.all_ordered_tasks) == 0
 
     def generate_id(self):
         """Generate a id for a new item. The id is generated as maximum of existing ids plus one"""
         if self.is_empty():
             return 1
-        return max([item.item_id for item in self.ordered_tasks]) + 1
+        return max([item.item_id for item in self.all_ordered_tasks]) + 1
 
 
 class Events(Collection):

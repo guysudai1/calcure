@@ -254,7 +254,7 @@ class Config:
             self.DATA_RELOAD_INTERVAL  = int(conf.get("Parameters", "data_reload_interval", fallback=0))
             self.RIGHT_PANE_PERCENTAGE = int(conf.get("Parameters", "right_pane_percentage", fallback=25))
             self.ONE_TIMER_AT_A_TIME   = conf.getboolean("Parameters", "one_timer_at_a_time", fallback=False)
-
+            self.COLLAPSED_ICON = "\u21AA"
             # ICS files:
             self.ICS_EVENT_FILES = conf.get("Parameters", "ics_event_files", fallback=None, raw=True)
             if self.ICS_EVENT_FILES is not None:
