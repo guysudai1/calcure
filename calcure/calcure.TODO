@@ -9,14 +9,36 @@
     ✔ move task groups @started(25-06-15 15:38) @done(25-06-15 17:36) @lasted(1h58m38s)
 ✔ Swap between elements @done(25-06-16 13:54)
 ☐ Add subtasks for a mission
-☐ Importance levels
+☐ Importance levels @started(25-06-16 15:31)
 ✔ Collapsed missions @started(25-06-16 14:24) @done(25-06-16 15:30) @lasted(1h6m5s)
 ☐ Filter by importance levels
 ☐ Better icons (only beginning with @)
 ☐ Searching
+    ☐ Create separate search screen?
 ☐ Tagging
+    ☐ Allow to create tags
 ☐ Status of mission (badge)
 ☐ Expanding extra information for missions
 ☐ Shared missions, sync across different clients
 ☐ Archive missions (create new archive view)
 ☐ Remove calendar from default view
+☐ Workspaces
+
+
+Mission status:
+- Blocked - waiting for something
+- WIP
+- Currently working on
+- Done
+
+
+Custom tags:
+- CONFLUENCE - if it's in the confluence 
+
+
+Importance:
+- Optional - can be deferred (1-2)
+- Low importance - nice to have (3-4)
+- Medium importance - to do in the far future (5-6)
+- High importance - to do in the near future (7-8)
+- Critical - must be done asap (9-10)
