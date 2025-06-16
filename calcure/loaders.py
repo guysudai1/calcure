@@ -79,7 +79,7 @@ class TaskLoaderCSV(LoaderCSV):
                 year, month, day = convert_to_persian_date(year, month, day)
 
             # Read task name and statuses:
-            if row[0 + shift][0] == '.':
+            if row[0 + shift].startswith('.'):
                 name = row[0 + shift][1:]
                 is_private = True
             else:

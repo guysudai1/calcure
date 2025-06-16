@@ -52,30 +52,6 @@ else:
 __version__ = "3.2.1"
 
 
-def read_items_from_user_arguments(screen, user_tasks, user_events, task_saver_csv, event_saver_csv):
-    """Read --task and --event flags from user arguments to create new tasks or events"""
-    try:
-        opts, _ = getopt.getopt(sys.argv[1:], "pjhvi", ["folder=", "config=", "task=", "event="])
-        for opt, arg in opts:
-            if opt in '--task':
-                name = arg
-                user_tasks.add_item(Task(len(user_tasks.items), name, Status.NORMAL, Timer([]), False))
-                screen.state = AppState.EXIT
-                task_saver_csv.save()
-            if opt in '--event':
-                year = int(arg.split("-")[0])
-                month = int(arg.split("-")[1])
-                day = int(arg.split("-")[2])
-                name = arg.split("-")[3]
-                event_id = user_events.items[-1].item_id + 1 if not user_events.is_empty() else 1
-                user_events.add_item(UserEvent(event_id, year, month, day, name,
-                                        1, Frequency.ONCE, Status.NORMAL, False))
-                screen.state = AppState.EXIT
-                event_saver_csv.save()
-    except (getopt.GetoptError, ValueError):
-        pass
-
-
 class View:
     """Parent class of a view that displays things at certain coordinates"""
 
@@ -166,9 +142,9 @@ class TaskView(View):
 
     def render(self):
         """Render a line with an icon, task, deadline, and timer"""
-        self.display_line(self.y, self.x + self.task_indent, self.info, self.color)
+        self.display_line(self.y, self.x + self.task_indent + 4, self.info, self.color)
 
-        deadline_indentation = self.screen.x_min + 2 + len(self.info) + self.task_indent
+        deadline_indentation = self.screen.x_min + 6 + len(self.info) + self.task_indent
         deadline_view = TaskDeadlineView(self.stdscr, self.y, deadline_indentation, self.task)
         deadline_view.render()
 
@@ -233,7 +209,7 @@ class JournalView(View):
 
         all_tasks = self.user_tasks.ordered_tasks
 
-        if not all_tasks and not self.user_ics_tasks.items and cf.SHOW_NOTHING_PLANNED:
+        if not all_tasks and not self.user_ics_tasks.ordered_tasks and cf.SHOW_NOTHING_PLANNED:
             self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.UNIMPORTANT)
         
         relevant_task_list = all_tasks[self.screen.offset:]
@@ -617,7 +593,7 @@ class ErrorView(View):
             clear_line(self.stdscr, self.screen.y_max - 2)
 
             # Depending on error type, display different messages:
-            if self.error.number_of_errors > 1 or "ERROR" in self.error.type:
+            if self.error.number_of_errors >= 1:
                 if self.error.number_of_errors == 1:
                     self.display_line(self.screen.y_max - 2, 0, self.error.text, Color.IMPORTANT)
                 else:
@@ -1007,12 +983,11 @@ def main(stdscr) -> None:
     task_saver_csv = TaskSaverCSV(user_tasks, cf)
     importer = Importer(user_tasks, user_events, cf)
 
-    read_items_from_user_arguments(screen, user_tasks, user_events, task_saver_csv, event_saver_csv)
-
     # Initialise terminal screen:
     stdscr = curses.initscr()
     curses.noecho()
     curses.curs_set(False)
+
     initialize_colors(cf)
 
     # Initialise screen views:

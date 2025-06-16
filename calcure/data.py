@@ -264,17 +264,15 @@ class Collection:
         return events_of_the_month
 
 
-class Tasks(Collection):
+class Tasks:
     """List of tasks created by the user"""
 
     def __init__(self):
-        super().__init__()
         self.task_tree: List[Task] = []
         self._root_task = RootTask(self.task_tree)
 
     def delete_all_items(self):
         self.task_tree.clear()
-        return super().delete_all_items()
 
     @property
     def ordered_tasks(self):
@@ -286,6 +284,23 @@ class Tasks(Collection):
 
         return task_list
     
+    def is_valid_number(self, number: int):
+        """Check if input is valid and corresponds to an item"""
+        return 0 <= number < len(self.ordered_tasks)
+
+    def toggle_item_status(self, task: Task, new_status):
+        """Toggle the status for the item with provided id"""
+        if task.status == new_status:
+            task.status = Status.NORMAL
+        else:
+            task.status = new_status
+        self.changed = True
+
+    def toggle_item_privacy(self, task):
+        """Toggle the privacy for the item with provided id"""
+        task.privacy = not task.privacy
+        self.changed = True
+
     def delete_task(self, task_id, delete_children):
         assert task_id != 0, "Cannot delete root task"
 
@@ -296,12 +311,15 @@ class Tasks(Collection):
             if not delete_children:
                 self.update_parent(child_task, task_to_remove.parent_id, delete_from_parent=False)
             elif delete_children:
-                super().delete_item(child_task.item_id)
-
-        super().delete_item(task_to_remove.item_id)
+                # No need to do anything here, because the parent's reference will go with the children
+                pass
 
         self.changed = True
-        
+    
+    def rename_task(self, task: Task, new_name):
+        task.name = new_name
+        self.changed = True
+
     def _delete_task_from_parents(self, task: Task):
         parent_task = self.get_task_by_id(task.parent_id)
         parent_task.children.remove(task)
@@ -319,7 +337,7 @@ class Tasks(Collection):
         if task_id == 0:
             return self._root_task
 
-        for task in self.items:
+        for task in self.ordered_tasks:
             if task.item_id == task_id:
                 return task 
         raise ValueError()
@@ -338,11 +356,9 @@ class Tasks(Collection):
         parent_task.children.append(item)
         self.changed = True
 
-        return super().add_item(item)
-
     @property
     def has_active_timer(self):
-        for item in self.items:
+        for item in self.ordered_tasks:
             if item.timer.is_counting:
                 return True
         return False
@@ -354,38 +370,28 @@ class Tasks(Collection):
         self.add_item(child_task)
         self.changed = True
 
-    def add_timestamp_for_task(self, selected_task_id):
+    def add_timestamp_for_task(self, task: Task):
         """Add a timestamp to this task"""
-        for item in self.items:
-            if item.item_id == selected_task_id:
-                item.timer.stamps.append(int(time.time()))
-                self.changed = True
-                break
+        task.timer.stamps.append(int(time.time()))
+        self.changed = True
 
-    def pause_all_other_timers(self, selected_task_id):
+    def pause_all_other_timers(self, task: Task):
         """Add a timestamp to this task"""
-        for item in self.items:
-            if item.timer.is_counting and item.item_id != selected_task_id:
-                item.timer.stamps.append(int(time.time()))
-                self.changed = True
+        if task.timer.is_counting:
+            task.timer.stamps.append(int(time.time()))
+            self.changed = True
 
-    def reset_timer_for_task(self, selected_task_id):
+    def reset_timer_for_task(self, task: Task):
         """Reset the timer for one of the tasks"""
-        for item in self.items:
-            if item.item_id == selected_task_id:
-                item.timer.stamps = []
-                self.changed = True
-                break
+        task.timer.stamps = []
+        self.changed = True
 
-    def change_deadline(self, selected_task_id, new_year, new_month, new_day):
+    def change_deadline(self, task: Task, new_year, new_month, new_day):
         """Reset the timer for one of the tasks"""
-        for item in self.items:
-            if item.item_id == selected_task_id:
-                item.year = new_year
-                item.month = new_month
-                item.day = new_day
-                self.changed = True
-                break
+        task.year = new_year
+        task.month = new_month
+        task.day = new_day
+        self.changed = True
 
     def flatten_children_ordered(self, parent_task: Task):
         """ This returns the task list ordered by which one will be displayed first """
@@ -446,11 +452,14 @@ class Tasks(Collection):
         
         self.changed = True
 
+    def is_empty(self):
+        return len(self.ordered_tasks) == 0
+
     def generate_id(self):
         """Generate a id for a new item. The id is generated as maximum of existing ids plus one"""
         if self.is_empty():
             return 1
-        return max([item.item_id for item in self.items]) + 1
+        return max([item.item_id for item in self.ordered_tasks]) + 1
 
 
 class Events(Collection):
