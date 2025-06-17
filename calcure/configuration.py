@@ -14,8 +14,6 @@ class Config:
     """User configuration loaded from the config.ini file"""
     def __init__(self):
         self.home_path = Path.home()
-        self.calcurse_todo_file = self.home_path / ".local" / "share" / "calcurse" / "todo"
-        self.calcurse_events_file = self.home_path / ".local" / "share" / "calcurse" / "apts"
         self.config_folder = self.home_path / ".config" / "calcure"
         self.config_file = self.config_folder / "config.ini"
         self.log_file = self.config_folder / "info.log"
@@ -49,23 +47,12 @@ class Config:
         conf = configparser.ConfigParser()
         conf["Parameters"] = {
                 "folder_with_datafiles":     self.shorten_path(self.config_folder),
-                "calcurse_todo_file":        self.shorten_path(self.calcurse_todo_file),
-                "calcurse_events_file":      self.shorten_path(self.calcurse_events_file),
                 "log_file":                  self.shorten_path(self.log_file),
                 "language":                  "en",
                 "default_view":              "journal",
                 "default_calendar_view":     "monthly",
-                "birthdays_from_abook":      "Yes",
                 "show_keybindings":          "Yes",
                 "privacy_mode":              "No",
-                "show_weather":              "No",
-                "weather_city":              "",
-                "weather_metric_units":      "Yes",
-                "minimal_today_indicator":   "Yes",
-                "minimal_days_indicator":    "Yes",
-                "minimal_weekend_indicator": "Yes",
-                "show_calendar_borders":     "No",
-                "show_moon_phases":          "No",
                 "cut_titles_by_cell_length": "No",
                 "ask_confirmations":         "Yes",
                 "ask_confirmation_to_quit":  "Yes",
@@ -74,8 +61,6 @@ class Config:
                 "show_holidays":             "Yes",
                 "show_nothing_planned":      "Yes",
                 "one_timer_at_a_time":       "No",
-                "holiday_country":           "UnitedStates",
-                "use_persian_calendar":      "No",
                 "start_week_day":            "1",
                 "weekend_days":              "6,7",
                 "refresh_interval":          "1",
@@ -201,50 +186,28 @@ class Config:
             conf.read(self.config_file, 'utf-8')
 
             # Reading default view:
-            default_view = conf.get("Parameters", "default_view", fallback="journal")
-            if default_view == 'journal':
-                self.DEFAULT_VIEW = AppState.JOURNAL
-            else:
-                self.DEFAULT_VIEW = AppState.CALENDAR
-
+            self.DEFAULT_VIEW = AppState.JOURNAL
+            
             # Calendar settings:
             self.SHOW_KEYBINDINGS          = conf.getboolean("Parameters", "show_keybindings", fallback=True)
-            self.MINIMAL_TODAY_INDICATOR   = conf.getboolean("Parameters", "minimal_today_indicator", fallback=True)
-            self.MINIMAL_DAYS_INDICATOR    = conf.getboolean("Parameters", "minimal_days_indicator", fallback=True)
-            self.MINIMAL_WEEKEND_INDICATOR = conf.getboolean("Parameters", "minimal_weekend_indicator", fallback=True)
             self.ASK_CONFIRMATIONS         = conf.getboolean("Parameters", "ask_confirmations", fallback=True)
             self.ASK_CONFIRMATION_TO_QUIT  = conf.getboolean("Parameters", "ask_confirmation_to_quit", fallback=True)
-            self.SHOW_WEATHER              = conf.getboolean("Parameters", "show_weather", fallback=False)
-            self.SHOW_CURRENT_TIME         = conf.getboolean("Parameters", "show_current_time", fallback=False)
+            self.SHOW_CURRENT_TIME         = conf.getboolean("Parameters", "show_current_time", fallback=True)
             self.DISPLAY_ICONS             = conf.getboolean("Parameters", "use_unicode_icons", fallback=True)
             self.DISPLAY_HOLIDAYS          = conf.getboolean("Parameters", "show_holidays", fallback=True)
             self.PRIVACY_MODE              = conf.getboolean("Parameters", "privacy_mode", fallback=False)
             self.CUT_TITLES                = conf.getboolean("Parameters", "cut_titles_by_cell_length", fallback=False)
-            self.BIRTHDAYS_FROM_ABOOK      = conf.getboolean("Parameters", "birthdays_from_abook", fallback=True)
             self.SPLIT_SCREEN              = conf.getboolean("Parameters", "split_screen", fallback=False)
             self.SHOW_NOTHING_PLANNED      = conf.getboolean("Parameters", "show_nothing_planned", fallback=True)
-            self.SHOW_CALENDAR_BORDERS     = conf.getboolean("Parameters", "show_calendar_borders", fallback=False)
-            self.SHOW_MOON_PHASES          = conf.getboolean("Parameters", "show_moon_phases", fallback=False)
-            self.USE_PERSIAN_CALENDAR      = conf.getboolean("Parameters", "use_persian_calendar", fallback=False)
             self.LANG                      = conf.get("Parameters", "language", fallback="en")
             self.START_WEEK_DAY            = int(conf.get("Parameters", "start_week_day", fallback=1))
             self.WEEKEND_DAYS              = conf.get("Parameters", "weekend_days", fallback="6,7")
             self.WEEKEND_DAYS              = [int(i) for i in self.WEEKEND_DAYS.split(",")]
-            self.HOLIDAY_COUNTRY           = conf.get("Parameters", "holiday_country", fallback="UnitedStates")
-            self.WEATHER_CITY              = conf.get("Parameters", "weather_city", fallback="")
-            self.WEATHER_METRIC_UNITS      = conf.getboolean("Parameters", "weather_metric_units", fallback=True)
             self.DEFAULT_CALENDAR_VIEW     = conf.get("Parameters", "default_calendar_view", fallback="monthly")
             self.LOG_FILE                  = conf.get("Parameters", "log_file", fallback=self.log_file)
             self.LOG_FILE                  = Path(self.LOG_FILE).expanduser()
 
             # Journal settings:
-            self.CALCURSE_TODO_FILE = conf.get("Parameters", "calcurse_todo_file", fallback=self.calcurse_todo_file)
-            self.CALCURSE_TODO_FILE = Path(self.CALCURSE_TODO_FILE).expanduser()
-
-
-            self.CALCURSE_EVENTS_FILE = conf.get("Parameters", "calcurse_events_file", fallback=self.calcurse_events_file)
-            self.CALCURSE_EVENTS_FILE = Path(self.CALCURSE_EVENTS_FILE).expanduser()
-
             self.JOURNAL_HEADER        = conf.get("Parameters", "journal_header", fallback="JOURNAL")
             self.SHOW_KEYBINDINGS      = conf.getboolean("Parameters", "show_keybindings", fallback=True)
             self.DONE_ICON             = conf.get("Parameters", "done_icon", fallback="✔") if self.DISPLAY_ICONS else "×"
@@ -255,14 +218,6 @@ class Config:
             self.RIGHT_PANE_PERCENTAGE = int(conf.get("Parameters", "right_pane_percentage", fallback=25))
             self.ONE_TIMER_AT_A_TIME   = conf.getboolean("Parameters", "one_timer_at_a_time", fallback=False)
             self.COLLAPSED_ICON = "\u21AA"
-            # ICS files:
-            self.ICS_EVENT_FILES = conf.get("Parameters", "ics_event_files", fallback=None, raw=True)
-            if self.ICS_EVENT_FILES is not None:
-                self.ICS_EVENT_FILES = [str(i) for i in self.ICS_EVENT_FILES.split(",")]
-
-            self.ICS_TASK_FILES = conf.get("Parameters", "ics_task_files", fallback=None, raw=True)
-            if self.ICS_TASK_FILES is not None:
-                self.ICS_TASK_FILES = [str(i) for i in self.ICS_TASK_FILES.split(",")]
 
             # Calendar colors:
             self.COLOR_TODAY           = int(conf.get("Colors", "color_today", fallback=2))
@@ -286,8 +241,6 @@ class Config:
             self.COLOR_ACTIVE_PANE     = int(conf.get("Colors", "color_active_pane", fallback=2))
             self.COLOR_SEPARATOR       = int(conf.get("Colors", "color_separator", fallback=7))
             self.COLOR_CALENDAR_BORDER = int(conf.get("Colors", "color_calendar_border", fallback=7))
-            self.COLOR_ICS_CALENDARS   = conf.get("Colors", "color_ics_calendars", fallback="2,3,1,7")
-            self.COLOR_ICS_CALENDARS   = [int(number) for number in self.COLOR_ICS_CALENDARS.split(",")]
 
             # Journal colors:
             self.COLOR_TODO           = int(conf.get("Colors", "color_todo", fallback=7))
@@ -297,18 +250,8 @@ class Config:
             self.COLOR_UNIMPORTANT    = int(conf.get("Colors", "color_unimportant", fallback=6))
 
             # Font styles:
-            self.BOLD_TODAY               = conf.getboolean("Styles", "bold_today", fallback=False)
-            self.BOLD_DAYS                = conf.getboolean("Styles", "bold_days", fallback=False)
-            self.BOLD_DAY_NAMES           = conf.getboolean("Styles", "bold_day_names", fallback=False)
-            self.BOLD_WEEKENDS            = conf.getboolean("Styles", "bold_weekends", fallback=False)
-            self.BOLD_WEEKEND_NAMES       = conf.getboolean("Styles", "bold_weekend_names", fallback=False)
             self.BOLD_TITLE               = conf.getboolean("Styles", "bold_title", fallback=False)
             self.BOLD_ACTIVE_PANE         = conf.getboolean("Styles", "bold_active_pane", fallback=False)
-            self.UNDERLINED_TODAY         = conf.getboolean("Styles", "underlined_today", fallback=False)
-            self.UNDERLINED_DAYS          = conf.getboolean("Styles", "underlined_days", fallback=False)
-            self.UNDERLINED_DAY_NAMES     = conf.getboolean("Styles", "underlined_day_names", fallback=False)
-            self.UNDERLINED_WEEKENDS      = conf.getboolean("Styles", "underlined_weekends", fallback=False)
-            self.UNDERLINED_WEEKEND_NAMES = conf.getboolean("Styles", "underlined_weekend_names", fallback=False)
             self.UNDERLINED_TITLE         = conf.getboolean("Styles", "underlined_title", fallback=False)
             self.UNDERLINED_ACTIVE_PANE   = conf.getboolean("Styles", "underlined_active_pane", fallback=False)
             self.STRIKETHROUGH_DONE       = conf.getboolean("Styles", "strikethrough_done", fallback=False)
@@ -329,7 +272,6 @@ class Config:
 
             self.data_folder = conf.get("Parameters", "folder_with_datafiles", fallback=self.config_folder)
             self.data_folder = Path(self.data_folder).expanduser()
-            self.EVENTS_FILE = self.data_folder / "events.csv"
             self.TASKS_FILE = self.data_folder / "tasks.csv"
 
         except Exception:
@@ -360,7 +302,6 @@ class Config:
                 if opt in '--folder':
                     self.data_folder = Path(arg).expanduser()
                     self.data_folder.mkdir(exist_ok=True)
-                    self.EVENTS_FILE = self.data_folder / "events.csv"
                     self.TASKS_FILE = self.data_folder / "tasks.csv"
                 elif opt == '-p':
                     self.PRIVACY_MODE = True
@@ -373,8 +314,6 @@ class Config:
                 elif opt in ('-v'):
                     self.DEFAULT_VIEW = AppState.EXIT
                     print ('Calcure - version 3.2.1')
-                elif opt in ('-i'):
-                    self.USE_PERSIAN_CALENDAR = True
         except getopt.GetoptError as e_message:
             logging.error("Invalid user arguments. %s", e_message)
             pass

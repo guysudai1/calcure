@@ -3,7 +3,6 @@
 import curses
 import logging
 
-from calcure.data import Frequency
 from calcure.colors import Color
 
 
@@ -118,17 +117,6 @@ def input_integer(stdscr, y, x, question):
     return number
 
 
-def input_day(stdscr, y, x, prompt_string):
-    """Ask user for an integer number and check if it is an integer"""
-    number = input_string(stdscr, y, x, prompt_string, 2)
-    try:
-        number = int(number)
-    except (ValueError, KeyboardInterrupt):
-        logging.warning("Incorrect day input.")
-        return None
-    return number
-
-
 def input_date(stdscr, y, x, prompt_string):
     """Ask user to input date in YYYY/MM/DD format and check if it was a valid entry"""
     date_unformatted = input_string(stdscr, y, x, prompt_string, 10)
@@ -141,21 +129,6 @@ def input_date(stdscr, y, x, prompt_string):
         logging.warning("Incorrect date input.")
         return None, None, None
 
-
-def input_frequency(stdscr, y, x, question):
-    """Ask user for the frequency of event repetitions"""
-    freq = input_string(stdscr, y, x, question, 2)
-    if freq == 'd':
-        return Frequency.DAILY
-    if freq == 'w':
-        return Frequency.WEEKLY
-    if freq == 'm':
-        return Frequency.MONTHLY
-    if freq == 'y':
-        return Frequency.YEARLY
-    if freq == 'n':
-        return Frequency.ONCE
-    return None
 
 
 def ask_confirmation(stdscr: curses.window, question, confirmations_enabled):

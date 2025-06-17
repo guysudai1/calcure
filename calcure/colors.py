@@ -32,16 +32,6 @@ class Color(Enum):
     EMPTY = auto()
     CALENDAR_BORDER = auto()
     DEADLINES = auto()
-    ICS_CALENDARS0 = auto()
-    ICS_CALENDARS1 = auto()
-    ICS_CALENDARS2 = auto()
-    ICS_CALENDARS3 = auto()
-    ICS_CALENDARS4 = auto()
-    ICS_CALENDARS5 = auto()
-    ICS_CALENDARS6 = auto()
-    ICS_CALENDARS7 = auto()
-    ICS_CALENDARS8 = auto()
-    ICS_CALENDARS9 = auto()
 
 
 def initialize_colors(cf):
@@ -74,21 +64,3 @@ def initialize_colors(cf):
     curses.init_pair(Color.EMPTY.value, cf.COLOR_BACKGROUND, cf.COLOR_BACKGROUND)
     curses.init_pair(Color.CALENDAR_BORDER.value, cf.COLOR_CALENDAR_BORDER, cf.COLOR_BACKGROUND)
     curses.init_pair(Color.DEADLINES.value, cf.COLOR_DEADLINES, cf.COLOR_BACKGROUND)
-
-    if not cf.MINIMAL_WEEKEND_INDICATOR:
-        curses.init_pair(Color.WEEKENDS.value, curses.COLOR_BLACK, cf.COLOR_WEEKENDS)
-    if not cf.MINIMAL_TODAY_INDICATOR:
-        curses.init_pair(Color.TODAY.value, curses.COLOR_BLACK, cf.COLOR_TODAY)
-    if not cf.MINIMAL_DAYS_INDICATOR:
-        curses.init_pair(Color.DAYS.value, curses.COLOR_BLACK, cf.COLOR_DAYS)
-
-    # Assign color pair for each ics resource:
-    if cf.ICS_EVENT_FILES is None:
-        return
-
-    for index in range(len(cf.ICS_EVENT_FILES)):
-        if index < len(cf.COLOR_ICS_CALENDARS):
-            color = cf.COLOR_ICS_CALENDARS[index] # Take colors from config
-        else:
-            color = cf.COLOR_ICS_CALENDARS[-1] # Remaining resources assume the last assigned color
-        curses.init_pair(Color.ICS_CALENDARS0.value + index, color, cf.COLOR_BACKGROUND)
