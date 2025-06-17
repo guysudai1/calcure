@@ -26,24 +26,7 @@ cf = Config()
 error = Error(cf.LOG_FILE)
 
 # Language:
-if cf.LANG == "fr":
-    from calcure.translations.fr import *
-elif cf.LANG == "ru":
-    from calcure.translations.ru import *
-elif cf.LANG == "it":
-    from calcure.translations.it import *
-elif cf.LANG == "br":
-    from calcure.translations.br import *
-elif cf.LANG == "tr":
-    from calcure.translations.tr import *
-elif cf.LANG == "zh":
-    from calcure.translations.zh import *
-elif cf.LANG == "tw":
-    from calcure.translations.tw import *
-elif cf.LANG == "sk":
-    from calcure.translations.sk import *
-else:
-    from calcure.translations.en import *
+from calcure.translations.en import *
 
 
 __version__ = "3.2.1"

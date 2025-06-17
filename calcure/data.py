@@ -30,7 +30,7 @@ class Tasks:
 
     def __init__(self):
         self.task_tree: List[Task] = []
-        self._root_task = RootTask(self.task_tree)
+        self.root_task = RootTask(self.task_tree)
 
     def delete_all_items(self):
         self.task_tree.clear()
@@ -109,7 +109,7 @@ class Tasks:
 
     def get_task_by_id(self, task_id):
         if task_id == 0:
-            return self._root_task
+            return self.root_task
 
         for task in self.all_ordered_tasks:
             if task.item_id == task_id:
@@ -193,6 +193,15 @@ class Tasks:
         return possible_child_task in subtasks
 
     def swap_task(self, src_task: Task, dst_task: Task):
+        if src_task == dst_task:
+            logging.error("Cannot move the task to itself")
+            return
+    
+        if self.is_task_child_of_other_task(dst_task, src_task, direct_subtask=False) \
+                or self.is_task_child_of_other_task(src_task, dst_task, direct_subtask=False):
+            logging.error("Cannot swap child with parent")
+            return
+
         # Get parents for both tasks
         src_task_parent = self.get_task_by_id(src_task.parent_id)
         dst_task_parent = self.get_task_by_id(dst_task.parent_id)
@@ -207,7 +216,7 @@ class Tasks:
         dst_task.parent_id = src_task_parent.item_id
         self.changed = True
 
-    def move_task(self, src_task: Task, dest_task: Task):
+    def move_task(self, src_task: Task, dest_task: Task|RootTask):
         """Move task from certain place to another in the list"""
 
         if src_task == dest_task:

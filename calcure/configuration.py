@@ -194,16 +194,10 @@ class Config:
             self.ASK_CONFIRMATION_TO_QUIT  = conf.getboolean("Parameters", "ask_confirmation_to_quit", fallback=True)
             self.SHOW_CURRENT_TIME         = conf.getboolean("Parameters", "show_current_time", fallback=True)
             self.DISPLAY_ICONS             = conf.getboolean("Parameters", "use_unicode_icons", fallback=True)
-            self.DISPLAY_HOLIDAYS          = conf.getboolean("Parameters", "show_holidays", fallback=True)
             self.PRIVACY_MODE              = conf.getboolean("Parameters", "privacy_mode", fallback=False)
-            self.CUT_TITLES                = conf.getboolean("Parameters", "cut_titles_by_cell_length", fallback=False)
             self.SPLIT_SCREEN              = conf.getboolean("Parameters", "split_screen", fallback=False)
             self.SHOW_NOTHING_PLANNED      = conf.getboolean("Parameters", "show_nothing_planned", fallback=True)
             self.LANG                      = conf.get("Parameters", "language", fallback="en")
-            self.START_WEEK_DAY            = int(conf.get("Parameters", "start_week_day", fallback=1))
-            self.WEEKEND_DAYS              = conf.get("Parameters", "weekend_days", fallback="6,7")
-            self.WEEKEND_DAYS              = [int(i) for i in self.WEEKEND_DAYS.split(",")]
-            self.DEFAULT_CALENDAR_VIEW     = conf.get("Parameters", "default_calendar_view", fallback="monthly")
             self.LOG_FILE                  = conf.get("Parameters", "log_file", fallback=self.log_file)
             self.LOG_FILE                  = Path(self.LOG_FILE).expanduser()
 

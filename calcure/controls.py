@@ -14,24 +14,7 @@ from calcure.screen import Screen
 cf = Config()
 
 # Language:
-if cf.LANG == "fr":
-    from calcure.translations.fr import *
-elif cf.LANG == "ru":
-    from calcure.translations.ru import *
-elif cf.LANG == "it":
-    from calcure.translations.it import *
-elif cf.LANG == "br":
-    from calcure.translations.br import *
-elif cf.LANG == "tr":
-    from calcure.translations.tr import *
-elif cf.LANG == "zh":
-    from calcure.translations.zh import *
-elif cf.LANG == "tw":
-    from calcure.translations.tw import *
-elif cf.LANG == "sk":
-    from calcure.translations.sk import *
-else:
-    from calcure.translations.en import *
+from calcure.translations.en import *
 
 
 def safe_run(func):
@@ -136,9 +119,12 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
                 clear_line(stdscr, screen.y_max-2)
                 number_to = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_MOVE_TO)
 
-                if number_to is not None and user_tasks.is_valid_number(number_to):
+                if number_to is not None and (user_tasks.is_valid_number(number_to) or number_to == -1):
                     src_task: Task = user_tasks.viewed_ordered_tasks[number_from]
-                    dest_task: Task = user_tasks.viewed_ordered_tasks[number_to]
+                    if number_to == -1:
+                        dest_task = user_tasks.root_task
+                    else:
+                        dest_task = user_tasks.viewed_ordered_tasks[number_to]
 
                     user_tasks.move_task(src_task, dest_task)
 

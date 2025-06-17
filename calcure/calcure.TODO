@@ -13,8 +13,9 @@
 ✔ Collapsed missions @started(25-06-16 14:24) @done(25-06-16 15:30) @lasted(1h6m5s)
 ☐ Filter by importance levels
 ☐ Better icons (only beginning with @)
-☐ Swap edge case where we swap with a child element
-☐ Better deserialization/serialization (json?)
+✔ Swap edge case where we swap with a child element @started(25-06-17 11:30) @done(25-06-17 11:45) @lasted(15m3s)
+✔ Move to root @done(25-06-17 11:45)
+☐ Better deserialization/serialization (json?) @started(25-06-17 11:45)
 ☐ Searching
     ☐ Create separate search screen?
 ☐ Tagging
