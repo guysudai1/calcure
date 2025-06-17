@@ -15,16 +15,18 @@
 ☐ Better icons (only beginning with @)
 ✔ Swap edge case where we swap with a child element @started(25-06-17 11:30) @done(25-06-17 11:45) @lasted(15m3s)
 ✔ Move to root @done(25-06-17 11:45)
-☐ Better deserialization/serialization (json?) @started(25-06-17 11:45)
+✔ Better deserialization/serialization (json?) @started(25-06-17 11:45) @done(25-06-17 15:33) @lasted(3h48m30s)
+✔ Support shelf to update the file @done(25-06-17 15:33)
 ☐ Searching
     ☐ Create separate search screen?
-☐ Tagging
+☐ Tagging/Badges
     ☐ Allow to create tags
-☐ Status of mission (badge)
+☐ Status of mission
 ☐ Expanding extra information for missions
 ☐ Shared missions, sync across different clients
 ☐ Archive missions (create new archive view)
-☐ Remove calendar from default view
+✔ Remove calendar from default view @done(25-06-17 15:34)
+✔ Remove extra translations and unneccesary lean @done(25-06-17 15:34)
 ☐ Workspaces
 
 

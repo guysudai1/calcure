@@ -7,7 +7,7 @@ import logging
 import datetime
 from pathlib import Path
 
-from calcure.data import AppState
+from calcure.consts import AppState
 
 
 class Config:
@@ -300,8 +300,6 @@ class Config:
                 elif opt == '-p':
                     self.PRIVACY_MODE = True
                 elif opt == '-j':
-                    self.DEFAULT_VIEW = AppState.JOURNAL
-                elif opt == '-d':
                     self.DEFAULT_VIEW = AppState.JOURNAL
                 elif opt in ('-h'):
                     self.DEFAULT_VIEW = AppState.HELP

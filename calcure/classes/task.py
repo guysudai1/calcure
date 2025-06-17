@@ -1,25 +1,45 @@
 from typing import List
 
+from calcure.classes.timer import Timer
+from calcure.consts import Status
+
 
 class Task:
     """Tasks created by the user"""
 
-    def __init__(self, item_id, name, status, timer, privacy, parent_id, collapse=False, year=0, month=0, day=0, calendar_number=None):
-        self.item_id = item_id
-        self.name = name
-        self.status = status
-        self.timer = timer
-        self.privacy = privacy
-        self.year = year
-        self.month = month
-        self.day = day
-        self.calendar_number = calendar_number
-        self.parent_id = parent_id
+    def __init__(self, item_id, name, status, timestamps: List[str], privacy, parent_id, collapse=False, year=0, month=0, day=0):
+        """
+        Node Management
+        """
+        self.item_id: int = item_id
+        self.parent_id: int = parent_id
+
+        """
+        General task properties
+        """
+        self.name: str = name
+        self.status: Status = status
+        self.privacy: bool = privacy
+        self.collapse: bool = collapse
+
+        """
+        Task Timer
+        """
+        self.timer: Timer = Timer(timestamps)
+
+        """
+        Deadline variables
+        """
+        self.year: int = year
+        self.month: int = month
+        self.day: int = day
         self.children: List[Task] = []
-        self.collapse = collapse
 
     def __eq__(self, other):
-        return self.item_id == other.item_id
+        if isinstance(other, Task):
+            return self.item_id == other.item_id
+        
+        raise NotImplementedError()
 
 class RootTask:
     """

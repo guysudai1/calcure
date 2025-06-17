@@ -6,12 +6,13 @@ import importlib
 # Modules:
 from calcure.classes.task import Task
 from calcure.classes.timer import Timer
+from calcure.consts import AppState, Status
 from calcure.data import *
 from calcure.dialogues import *
 from calcure.configuration import Config
 from calcure.screen import Screen
 
-cf = Config()
+global_config = Config()
 
 # Language:
 from calcure.translations.en import *
@@ -26,7 +27,7 @@ def safe_run(func):
 
         # Handle keyboard interruption with ctrl+c:
         except KeyboardInterrupt:
-            confirmed = ask_confirmation(stdscr, MSG_EXIT, cf.ASK_CONFIRMATION_TO_QUIT)
+            confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
             screen.state = AppState.EXIT if confirmed else screen.state
 
         # Prevent crash if no input:
@@ -56,7 +57,7 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TM_ADD)
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
-                if cf.ONE_TIMER_AT_A_TIME:
+                if global_config.ONE_TIMER_AT_A_TIME:
                     user_tasks.pause_all_other_timers(task)
                 user_tasks.add_timestamp_for_task(task)
 
@@ -122,11 +123,11 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
                 if number_to is not None and (user_tasks.is_valid_number(number_to) or number_to == -1):
                     src_task: Task = user_tasks.viewed_ordered_tasks[number_from]
                     if number_to == -1:
-                        dest_task = user_tasks.root_task
+                        move_dest_task = user_tasks.root_task
                     else:
-                        dest_task = user_tasks.viewed_ordered_tasks[number_to]
+                        move_dest_task = user_tasks.viewed_ordered_tasks[number_to]
 
-                    user_tasks.move_task(src_task, dest_task)
+                    user_tasks.move_task(src_task, move_dest_task)
 
         if screen.key in ['e', 'r']:
             number = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_EDIT)
@@ -135,7 +136,7 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
 
                 number_relative_to_offset = number + 2 - screen.offset 
                 clear_line(stdscr, number_relative_to_offset, screen.x_min)
-                new_name = input_string(stdscr, number_relative_to_offset, screen.x_min + 4 + user_tasks.get_indent_count(task), cf.TODO_ICON+' ', screen.x_max-4)
+                new_name = input_string(stdscr, number_relative_to_offset, screen.x_min + 4 + user_tasks.get_indent_count(task), global_config.TODO_ICON+' ', screen.x_max-4)
                 if new_name:
                     user_tasks.rename_task(task, new_name)
 
@@ -148,8 +149,8 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
 
                 if number_to is not None and user_tasks.is_valid_number(number_to):
                     src_task: Task = user_tasks.viewed_ordered_tasks[number_from]
-                    dest_task: Task = user_tasks.viewed_ordered_tasks[number_to]
-                    user_tasks.swap_task(src_task, dest_task)
+                    swap_dest_task: Task = user_tasks.viewed_ordered_tasks[number_to]
+                    user_tasks.swap_task(src_task, swap_dest_task)
 
         if screen.key == 'A':
             task_number: int|None = input_integer(stdscr, screen.y_max-2, 0, MSG_TS_SUB)
@@ -190,14 +191,14 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
 
             y_offset = amount_of_elements_on_screen + HEADER_FIELD_COUNT
             clear_line(stdscr, y_offset, screen.x_min)
-            task_name = input_string(stdscr, y_offset, screen.x_min + 4, cf.TODO_ICON+' ', screen.x_max - 4)
+            task_name = input_string(stdscr, y_offset, screen.x_min + 4, global_config.TODO_ICON+' ', screen.x_max - 4)
             if task_name:
                 task_id = user_tasks.generate_id()
-                user_tasks.add_item(Task(task_id, task_name, Status.NORMAL, Timer([]), False, parent_id=0))
+                user_tasks.add_item(Task(task_id, task_name, Status.NORMAL, [], False, parent_id=0))
 
         # Bulk operations:
         if screen.key in ["X"]:
-            confirmed = ask_confirmation(stdscr, MSG_TS_DEL_ALL, cf.ASK_CONFIRMATIONS)
+            confirmed = ask_confirmation(stdscr, MSG_TS_DEL_ALL, global_config.ASK_CONFIRMATIONS)
             if confirmed:
                 user_tasks.delete_all_items()
 
@@ -217,14 +218,14 @@ def control_journal_screen(stdscr, screen: Screen, user_tasks: Tasks):
 
         # Other actions:
         if vim_style_exit(stdscr, screen):
-            confirmed = ask_confirmation(stdscr, MSG_EXIT, cf.ASK_CONFIRMATION_TO_QUIT)
+            confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
             screen.state = AppState.EXIT if confirmed else screen.state
         if screen.key == "*":
             screen.privacy = not screen.privacy
         if screen.key == "?":
             screen.state = AppState.HELP
         if screen.key == "q":
-            confirmed = ask_confirmation(stdscr, MSG_EXIT, cf.ASK_CONFIRMATION_TO_QUIT)
+            confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
             screen.state = AppState.EXIT if confirmed else screen.state
         if screen.key in ["/"]:
             screen.split = not screen.split
@@ -239,7 +240,7 @@ def control_help_screen(stdscr, screen):
 
     # Handle vim-style exit on "ZZ" and "ZQ":
     if vim_style_exit(stdscr, screen):
-        confirmed = ask_confirmation(stdscr, MSG_EXIT, cf.ASK_CONFIRMATION_TO_QUIT)
+        confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
         screen.state = AppState.EXIT if confirmed else screen.state
 
     # Handle keys to exit the help screen:

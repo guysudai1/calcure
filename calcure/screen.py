@@ -3,18 +3,18 @@
 import datetime
 import logging
 
-from calcure.data import AppState
 from calcure.calendars import Calendar
+from calcure.consts import AppState
 
 
 class Screen:
     """Main state of the program that describes what is displayed and how"""
-    def __init__(self, stdscr, cf):
+    def __init__(self, stdscr, global_config):
         self.stdscr = stdscr
-        self.privacy = cf.PRIVACY_MODE
-        self.state = cf.DEFAULT_VIEW
-        self.split = cf.SPLIT_SCREEN
-        self.right_pane_percentage = cf.RIGHT_PANE_PERCENTAGE
+        self.privacy = global_config.PRIVACY_MODE
+        self.state = global_config.DEFAULT_VIEW
+        self.split = global_config.SPLIT_SCREEN
+        self.right_pane_percentage = global_config.RIGHT_PANE_PERCENTAGE
         self.currently_drawn = self.state
         self.selection_mode = False
         self.refresh_now = True
@@ -24,8 +24,6 @@ class Screen:
         self.day = self.today.day
         self.month = self.today.month
         self.year = self.today.year
-        self.reload_interval = cf.DATA_RELOAD_INTERVAL
-        self.last_data_reload_time = datetime.datetime.now()
         self.offset = 0
 
     @property
@@ -87,21 +85,6 @@ class Screen:
     def number_of_weeks(self) -> int:
         """Calculate how many weeks are in this month"""
         return len(Calendar(0).monthdayscalendar(self.year, self.month))
-
-    @property
-    def is_time_to_reload(self):
-        """Check if enough time passed since last data reload or it was requested"""
-        if self.reload_data:
-            self.reload_data = False
-            return True
-        if self.reload_interval == 0:
-            return False
-        reload_interval = datetime.timedelta(minutes=self.reload_interval)
-        if datetime.datetime.now() - self.last_data_reload_time > reload_interval:
-            self.last_data_reload_time = datetime.datetime.now()
-            return True
-        else:
-            return False
 
     def is_valid_date(self, year, month, day) -> bool:
         """Check if a date corresponds to any actually existing date"""
