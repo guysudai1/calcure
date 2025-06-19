@@ -7,7 +7,8 @@ import logging
 import datetime
 from pathlib import Path
 
-from calcure.consts import AppState
+from calcure.consts import AppState, CursesColor
+from calcure.prompt import IconCompleter
 
 
 class Config:
@@ -64,16 +65,13 @@ class Config:
                 "start_week_day":            "1",
                 "weekend_days":              "6,7",
                 "refresh_interval":          "1",
+                "save_interval":             "10",
                 "data_reload_interval":      "0",
                 "split_screen":              "No",
                 "right_pane_percentage":     "25",
                 "journal_header":            "JOURNAL",
                 "event_icon":                "•",
                 "privacy_icon":              "•",
-                "today_icon":                "•",
-                "birthday_icon":             "★",
-                "holiday_icon":              "⛱",
-                "hidden_icon":               "...",
                 "done_icon":                 "✔",
                 "todo_icon":                 "•",
                 "important_icon":            "‣",
@@ -82,48 +80,29 @@ class Config:
                 }
 
         conf["Colors"] = {
-                "color_today":           "2",
-                "color_events":          "4",
-                "color_days":            "7",
-                "color_day_names":       "4",
-                "color_weekends":        "1",
-                "color_weekend_names":   "1",
                 "color_hints":           "7",
                 "color_prompts":         "7",
                 "color_confirmations":   "1",
-                "color_birthdays":       "1",
-                "color_holidays":        "2",
-                "color_todo":            "7",
-                "color_done":            "6",
+                "color_not_started":     "38",
+                "color_wip":             "173",
+                "color_current_mission": "57",
+                "color_waiting":         "230",
+                "color_done":            "40",
                 "color_title":           "4",
                 "color_calendar_header": "4",
-                "color_important":       "1",
-                "color_unimportant":     "6",
                 "color_timer":           "2",
                 "color_timer_paused":    "7",
                 "color_time":            "7",
                 "color_deadlines":       "3",
-                "color_weather":         "2",
                 "color_active_pane":     "2",
                 "color_separator":       "7",
                 "color_calendar_border": "7",
-                "color_ics_calendars":   "2,3,1,7,4,5,2,3,1,7",
                 "color_background":      "-1",
                 }
 
         conf["Styles"] = {
-                "bold_today":               "No",
-                "bold_days":                "No",
-                "bold_day_names":           "No",
-                "bold_weekends":            "No",
-                "bold_weekend_names":       "No",
                 "bold_title":               "No",
                 "bold_active_pane":         "No",
-                "underlined_today":         "No",
-                "underlined_days":          "No",
-                "underlined_day_names":     "No",
-                "underlined_weekends":      "No",
-                "underlined_weekend_names": "No",
                 "underlined_title":         "No",
                 "underlined_active_pane":   "No",
                 "strikethrough_done":       "No",
@@ -212,36 +191,31 @@ class Config:
             self.RIGHT_PANE_PERCENTAGE = int(conf.get("Parameters", "right_pane_percentage", fallback=25))
             self.ONE_TIMER_AT_A_TIME   = conf.getboolean("Parameters", "one_timer_at_a_time", fallback=False)
             self.COLLAPSED_ICON = "\u21AA"
+            self.JOURNAL_SAVE_INTERVAL        = float(conf.get("Parameters", "save_interval", fallback=10))
 
             # Calendar colors:
-            self.COLOR_TODAY           = int(conf.get("Colors", "color_today", fallback=2))
-            self.COLOR_EVENTS          = int(conf.get("Colors", "color_events", fallback=4))
-            self.COLOR_DAYS            = int(conf.get("Colors", "color_days", fallback=7))
-            self.COLOR_DAY_NAMES       = int(conf.get("Colors", "color_day_names", fallback=4))
-            self.COLOR_WEEKENDS        = int(conf.get("Colors", "color_weekends", fallback=1))
-            self.COLOR_WEEKEND_NAMES   = int(conf.get("Colors", "color_weekend_names", fallback=1))
-            self.COLOR_HINTS           = int(conf.get("Colors", "color_hints", fallback=7))
-            self.COLOR_PROMPTS         = int(conf.get("Colors", "color_prompts", fallback=7))
-            self.COLOR_BIRTHDAYS       = int(conf.get("Colors", "color_birthdays", fallback=1))
-            self.COLOR_HOLIDAYS        = int(conf.get("Colors", "color_holidays", fallback=2))
-            self.COLOR_DEADLINES       = int(conf.get("Colors", "color_deadlines", fallback=3))
-            self.COLOR_CONFIRMATIONS   = int(conf.get("Colors", "color_confirmations", fallback=1))
-            self.COLOR_TIMER           = int(conf.get("Colors", "color_timer", fallback=2))
-            self.COLOR_TIMER_PAUSED    = int(conf.get("Colors", "color_timer_paused", fallback=7))
-            self.COLOR_TIME            = int(conf.get("Colors", "color_time", fallback=7))
-            self.COLOR_WEATHER         = int(conf.get("Colors", "color_weather", fallback=2))
-            self.COLOR_BACKGROUND      = int(conf.get("Colors", "color_background", fallback=-1))
-            self.COLOR_CALENDAR_HEADER = int(conf.get("Colors", "color_calendar_header", fallback=4))
-            self.COLOR_ACTIVE_PANE     = int(conf.get("Colors", "color_active_pane", fallback=2))
-            self.COLOR_SEPARATOR       = int(conf.get("Colors", "color_separator", fallback=7))
-            self.COLOR_CALENDAR_BORDER = int(conf.get("Colors", "color_calendar_border", fallback=7))
+            self.COLOR_HINTS           = int(conf.get("Colors", "color_hints", fallback=CursesColor.WHITE.value))
+            self.COLOR_PROMPTS         = int(conf.get("Colors", "color_prompts", fallback=CursesColor.WHITE.value))
+            self.COLOR_DEADLINES       = int(conf.get("Colors", "color_deadlines", fallback=CursesColor.YELLOW.value))
+            self.COLOR_CONFIRMATIONS   = int(conf.get("Colors", "color_confirmations", fallback=CursesColor.RED.value))
+            self.COLOR_TIMER           = int(conf.get("Colors", "color_timer", fallback=CursesColor.GREEN.value))
+            self.COLOR_TIMER_PAUSED    = int(conf.get("Colors", "color_timer_paused", fallback=CursesColor.WHITE.value))
+            self.COLOR_TIME            = int(conf.get("Colors", "color_time", fallback=CursesColor.WHITE.value))
+            self.COLOR_BACKGROUND      = int(conf.get("Colors", "color_background", fallback=-CursesColor.RED.value))
+            self.COLOR_CALENDAR_HEADER = int(conf.get("Colors", "color_calendar_header", fallback=CursesColor.BLUE.value))
+            self.COLOR_ACTIVE_PANE     = int(conf.get("Colors", "color_active_pane", fallback=CursesColor.GREEN.value))
+            self.COLOR_SEPARATOR       = int(conf.get("Colors", "color_separator", fallback=CursesColor.WHITE.value))
+            self.COLOR_CALENDAR_BORDER = int(conf.get("Colors", "color_calendar_border", fallback=CursesColor.WHITE.value))
 
             # Journal colors:
-            self.COLOR_TODO           = int(conf.get("Colors", "color_todo", fallback=7))
-            self.COLOR_DONE           = int(conf.get("Colors", "color_done", fallback=6))
-            self.COLOR_TITLE          = int(conf.get("Colors", "color_title", fallback=1))
-            self.COLOR_IMPORTANT      = int(conf.get("Colors", "color_important", fallback=1))
-            self.COLOR_UNIMPORTANT    = int(conf.get("Colors", "color_unimportant", fallback=6))
+            self.COLOR_NOT_STARTED           = int(conf.get("Colors", "color_not_started", fallback=38))
+            self.COLOR_WIP      = int(conf.get("Colors", "color_wip", fallback=173)) 
+            self.COLOR_CURRENT_MISSION    = int(conf.get("Colors", "color_current_mission", fallback=57))
+            self.COLOR_WAITING    = int(conf.get("Colors", "color_waiting", fallback=230))
+            self.COLOR_DONE           = int(conf.get("Colors", "color_done", fallback=40))
+            self.COLOR_IMPORTANCE           = int(conf.get("Colors", "color_importance", fallback=231))
+            
+            self.COLOR_TITLE          = int(conf.get("Colors", "color_title", fallback=CursesColor.RED.value)) # TODO: Pick color
 
             # Font styles:
             self.BOLD_TITLE               = conf.getboolean("Styles", "bold_title", fallback=False)
@@ -251,19 +225,16 @@ class Config:
             self.STRIKETHROUGH_DONE       = conf.getboolean("Styles", "strikethrough_done", fallback=False)
 
             # Icons:
-            self.TODAY_ICON       = conf.get("Parameters", "today_icon", fallback="•") if self.DISPLAY_ICONS else "·"
             self.PRIVACY_ICON     = conf.get("Parameters", "privacy_icon", fallback="•") if self.DISPLAY_ICONS else "·"
-            self.HIDDEN_ICON      = conf.get("Parameters", "hidden_icon", fallback="...")
-            self.EVENT_ICON       = conf.get("Parameters", "event_icon", fallback="•") if self.DISPLAY_ICONS else "·"
-            self.BIRTHDAY_ICON    = conf.get("Parameters", "birthday_icon", fallback="★") if self.DISPLAY_ICONS else "·"
-            self.HOLIDAY_ICON     = conf.get("Parameters", "holiday_icon", fallback="☘️") if self.DISPLAY_ICONS else "·"
             self.SEPARATOR_ICON   = conf.get("Parameters", "separator_icon", fallback="│")
             self.DEADLINE_ICON    = conf.get("Parameters", "deadline_icon", fallback="⚑") if self.DISPLAY_ICONS else "·"
             try:
-                self.ICONS = {word: icon for (word, icon) in conf.items("Event icons")}
+                self.CUSTOM_ICONS = {word: icon for (word, icon) in conf.items("Event icons")}
             except configparser.NoSectionError:
-                self.ICONS = {}
+                self.CUSTOM_ICONS = {}
 
+            self.icon_completer = IconCompleter(list(self.CUSTOM_ICONS.items()))
+            
             self.data_folder = conf.get("Parameters", "folder_with_datafiles", fallback=self.config_folder)
             self.data_folder = Path(self.data_folder).expanduser()
             self.TASKS_FILE = self.data_folder / "tasks.csv"

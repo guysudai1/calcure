@@ -9,23 +9,34 @@ from typing import List
 
 from calcure.classes.task import RootTask, Task
 from calcure.classes.timer import Timer
-from calcure.consts import Status
+from calcure.consts import Importance, Status
 
 
 class Tasks:
     """List of tasks created by the user"""
 
     def __init__(self, filename: Path):
-        self._shelve_file: shelve.Shelf = self._initialize_shelve(filename)
+        self._shelve_filename = filename
+        self._shelve_file: shelve.Shelf = self._initialize_shelve()
         self.task_tree: List[Task] = self._shelve_file["task_tree"]
         self.root_task = RootTask(self.task_tree)
+        self.changed = False
 
     def cleanup(self):
         self._shelve_file.sync()
         self._shelve_file.close()
-    
-    def _initialize_shelve(self, filename: Path):
-        shelf: shelve.Shelf = shelve.open(filename, writeback=True, protocol=4)
+
+    def save_changes_and_reopen_shelve(self):
+        self._shelve_file.sync()
+        self._shelve_file.close()
+
+        # Re-initialize shelve file
+        self._shelve_file: shelve.Shelf = self._initialize_shelve()
+        self.task_tree: List[Task] = self._shelve_file["task_tree"]
+        self.root_task = RootTask(self.task_tree)
+
+    def _initialize_shelve(self):
+        shelf: shelve.Shelf = shelve.open(self._shelve_filename, writeback=True, protocol=4)
         if "task_tree" not in shelf:
             shelf["task_tree"] = []
 
@@ -33,6 +44,7 @@ class Tasks:
 
     def delete_all_items(self):
         self.task_tree.clear()
+        self.changed = True
 
     def _get_ordered_tasks(self, hide_collapsed: bool) -> List[Task]:
         task_list = []
@@ -54,22 +66,27 @@ class Tasks:
     
     def is_valid_number(self, number: int):
         """Check if input is valid and corresponds to an item"""
-        return 0 <= number < len(self.all_ordered_tasks)
+        return 0 <= number < len(self.viewed_ordered_tasks)
 
-    def toggle_item_status(self, task: Task, new_status):
-        """Toggle the status for the item with provided id"""
-        if task.status == new_status:
-            task.status = Status.NORMAL
-        else:
-            task.status = new_status
+    def change_item_importance(self, task: Task, new_importance: Importance):
+        """Change task importance"""
+        task.importance = new_importance
+        self.changed = True
+
+    def change_item_status(self, task: Task, new_status):
+        """Change task status"""
+        task.status = new_status
+        self.changed = True
 
     def toggle_task_collapse(self, task: Task):
         """Toggle the collapse for the task"""
         task.collapse = not task.collapse
+        self.changed = True
 
     def toggle_item_privacy(self, task):
         """Toggle the privacy for the item with provided id"""
         task.privacy = not task.privacy
+        self.changed = True
 
     def delete_task(self, task_id, delete_children):
         assert task_id != 0, "Cannot delete root task"
@@ -83,14 +100,17 @@ class Tasks:
             elif delete_children:
                 # No need to do anything here, because the parent's reference will go with the children
                 pass
-
+        
+        self.changed = True
     
     def rename_task(self, task: Task, new_name):
         task.name = new_name
+        self.changed = True
 
     def _delete_task_from_parents(self, task: Task):
         parent_task = self.get_task_by_id(task.parent_id)
         parent_task.children.remove(task)
+        self.changed = True
 
     def get_indent_count(self, task):
         indent = 0
@@ -116,10 +136,12 @@ class Tasks:
         item.parent_id = new_parent_id
         parent_task = self.get_task_by_id(item.parent_id)
         parent_task.children.append(item)
+        self.changed = True
 
     def add_item(self, item: Task):
         parent_task = self.get_task_by_id(item.parent_id)
         parent_task.children.append(item)
+        self.changed = True
 
     @property
     def has_active_timer(self):
@@ -130,27 +152,32 @@ class Tasks:
 
     def add_subtask(self, task_name, parent_task: Task):
         """Add a subtask for certain task in the journal"""
-        child_task = Task(self.generate_id(), task_name,  Status.NORMAL, [], False, parent_id=parent_task.item_id)
+        child_task = Task(self.generate_id(), task_name,  Status.NOT_STARTED, [], False, parent_id=parent_task.item_id)
         self.add_item(child_task)
+        self.changed = True
 
     def add_timestamp_for_task(self, task: Task):
         """Add a timestamp to this task"""
         task.timer.stamps.append(int(time.time()))
+        self.changed = True
 
     def pause_all_other_timers(self, task: Task):
         """Add a timestamp to this task"""
         if task.timer.is_counting:
             task.timer.stamps.append(int(time.time()))
+        self.changed = True
 
     def reset_timer_for_task(self, task: Task):
         """Reset the timer for one of the tasks"""
         task.timer.stamps = []
+        self.changed = True
 
     def change_deadline(self, task: Task, new_year, new_month, new_day):
         """Reset the timer for one of the tasks"""
         task.year = new_year
         task.month = new_month
         task.day = new_day
+        self.changed = True
 
     def flatten_children_ordered(self, parent_task: Task|RootTask, hide_collapsed: bool = False):
         """ This returns the task list ordered by which one will be displayed first """
@@ -201,6 +228,8 @@ class Tasks:
         src_task.parent_id = dst_task_parent.item_id
         dst_task.parent_id = src_task_parent.item_id
 
+        self.changed = True
+
     def move_task(self, src_task: Task, dest_task: Task|RootTask):
         """Move task from certain place to another in the list"""
 
@@ -217,6 +246,8 @@ class Tasks:
             return
     
         self.update_parent(src_task, dest_task.item_id, delete_from_parent=True)
+
+        self.changed = True
         
 
     def is_empty(self):

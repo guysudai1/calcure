@@ -41,6 +41,7 @@ class View:
             elif underlined and not bold:
                 self.stdscr.addstr(y, x, text, curses.color_pair(color.value) | curses.A_UNDERLINE)
             else:
-                self.stdscr.addstr(y, x, text, curses.color_pair(color.value))
+                color = color.value if hasattr(color, "value") else color
+                self.stdscr.addstr(y, x, text, curses.color_pair(color))
         except curses.error: # Fix for occasional error with large zoom (reason is unclear)
             return

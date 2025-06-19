@@ -1,18 +1,39 @@
+import time
 from calcure.base_view import View
 from calcure.configuration import AppState
+from calcure.data import Tasks
 from calcure.views.fragments.header import HeaderView
 from calcure.singletons import global_config
 from calcure.views.fragments.journal import JournalView
 
 
 class JournalScreenView(View):
-    def __init__(self, stdscr, y, x, user_tasks, screen):
+    def __init__(self, stdscr, y, x, user_tasks: Tasks, screen):
         super().__init__(stdscr, y, x)
         self.user_tasks = user_tasks
         self.screen = screen
+        self._last_save_time = None
+
+    def _save_if_needed(self):
+        if not self.user_tasks.changed:
+            return 
+    
+        if self._last_save_time is None:
+            self.user_tasks.save_changes_and_reopen_shelve()
+            self._last_save_time = time.time()
+            self.user_tasks.changed = False
+        
+        time_passed = time.time() - self._last_save_time
+        if time_passed >= global_config.JOURNAL_SAVE_INTERVAL:
+            self.user_tasks.save_changes_and_reopen_shelve()
+            self._last_save_time = time.time()
+            self.user_tasks.changed = False
+
 
     def render(self):
         """Journal view showing all tasks"""
+        self._save_if_needed()
+
         self.screen.currently_drawn = AppState.JOURNAL
         if self.screen.x_max < 6 or self.screen.y_max < 3:
             return

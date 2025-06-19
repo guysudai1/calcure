@@ -8,11 +8,14 @@
     ✔ delete task groups @started(25-06-15 15:38) @done(25-06-15 17:36) @lasted(1h58m38s)
     ✔ move task groups @started(25-06-15 15:38) @done(25-06-15 17:36) @lasted(1h58m38s)
 ✔ Swap between elements @done(25-06-16 13:54)
-☐ Add subtasks for a mission
-☐ Importance levels
+✔ Add subtasks for a mission @done(25-06-19 09:34)
+✔ Importance levels @started(25-06-17 15:39) @done(25-06-18 16:17) @lasted(1d38m38s)
 ✔ Collapsed missions @started(25-06-16 14:24) @done(25-06-16 15:30) @lasted(1h6m5s)
 ☐ Filter by importance levels
-☐ Better icons (only beginning with @)
+✔ Better icons (only beginning with @) @started(25-06-18 18:09) @done(25-06-19 09:33) @lasted(15h24m46s)
+    ✔ Dont use icons instead of the task * todo icon @started(25-06-18 18:08) @done(25-06-19 09:33) @lasted(15h25m46s)
+    ✔ Improve prompt and add autosuggestions for icons @started(25-06-18 18:08) @done(25-06-18 18:46) @lasted(38m3s)
+✔ Better prompt engine (prompt_toolkit) @done(25-06-18 18:08)
 ✔ Swap edge case where we swap with a child element @started(25-06-17 11:30) @done(25-06-17 11:45) @lasted(15m3s)
 ✔ Move to root @done(25-06-17 11:45)
 ✔ Better deserialization/serialization (json?) @started(25-06-17 11:45) @done(25-06-17 15:33) @lasted(3h48m30s)
@@ -21,10 +24,11 @@
     ☐ Create separate search screen?
 ☐ Tagging/Badges
     ☐ Allow to create tags
-☐ Status of mission
+☐ Change user interface documentation (move to calendar....)
+✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
 ☐ Expanding extra information for missions
 ☐ Shared missions, sync across different clients
-☐ Archive missions (create new archive view)
+☐ Archive missions (create new archive view) @started(25-06-19 09:34)
 ✔ Remove calendar from default view @done(25-06-17 15:34)
 ✔ Remove extra translations and unneccesary lean @done(25-06-17 15:34)
 ☐ Workspaces

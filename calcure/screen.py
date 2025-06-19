@@ -4,12 +4,13 @@ import datetime
 import logging
 
 from calcure.calendars import Calendar
+from calcure.configuration import Config
 from calcure.consts import AppState
 
 
 class Screen:
     """Main state of the program that describes what is displayed and how"""
-    def __init__(self, stdscr, global_config):
+    def __init__(self, stdscr, global_config: Config):
         self.stdscr = stdscr
         self.privacy = global_config.PRIVACY_MODE
         self.state = global_config.DEFAULT_VIEW
@@ -25,7 +26,7 @@ class Screen:
         self.month = self.today.month
         self.year = self.today.year
         self.offset = 0
-
+        
     @property
     def is_active_pane(self):
         """Return True if currently drawn pane in the active one"""

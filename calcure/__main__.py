@@ -10,13 +10,9 @@ import importlib
 import threading
 
 from calcure.base_view import View
-from calcure.calendars import Calendar
 from calcure.consts import AppState
-from calcure.errors import Error
-from calcure.configuration import Config
-from calcure.dialogues import clear_line
 from calcure.screen import Screen
-from calcure.colors import Color, initialize_colors
+from calcure.colors import initialize_colors
 from calcure.data import *
 from calcure.controls import *
 

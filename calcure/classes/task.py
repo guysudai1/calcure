@@ -1,13 +1,13 @@
 from typing import List
 
 from calcure.classes.timer import Timer
-from calcure.consts import Status
+from calcure.consts import Importance, Status
 
 
 class Task:
     """Tasks created by the user"""
 
-    def __init__(self, item_id, name, status, timestamps: List[str], privacy, parent_id, collapse=False, year=0, month=0, day=0):
+    def __init__(self, item_id, name, status, timestamps: List[str], privacy, parent_id, importance=Importance.UNDECIDED, collapse=False, year=0, month=0, day=0):
         """
         Node Management
         """
@@ -21,6 +21,7 @@ class Task:
         self.status: Status = status
         self.privacy: bool = privacy
         self.collapse: bool = collapse
+        self.importance: Importance = importance
 
         """
         Task Timer

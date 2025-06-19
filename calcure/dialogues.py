@@ -1,11 +1,18 @@
 """ Module that controls interactions with the user, like questions and confirmations"""
 
 import curses
+from email.errors import InvalidMultipartContentTransferEncodingDefect
 import logging
+import sys
 
 from calcure.colors import Color
+from calcure.singletons import global_config
+from calcure.consts import Importance, Status
 
+import prompt_toolkit
 
+from calcure.screen import Screen
+from prompt_toolkit.completion import Completer, Completion
 
 def safe_run(func):
     """Decorator preventing crashes on keyboard interruption and no input"""
@@ -22,6 +29,7 @@ def safe_run(func):
         except curses.error:
             pass
     return inner
+
 
 
 def display_question(stdscr, y, x, question, color):
@@ -88,38 +96,77 @@ def input_field(stdscr, y, x, field_length):
         stdscr.addstr(y, x, input_str + " ")
         stdscr.refresh()
 
+from prompt_toolkit.formatted_text import FormattedText
 
-def input_string(stdscr, y, x, question, answer_length):
+def input_string(stdscr: curses.window, y, x, question, default="", placeholder: str|None=None, autocomplete: Completer|None=None):
     """Ask user to input something and return it as a string"""
-    curses.echo()
-    curses.curs_set(True)
-    display_question(stdscr, y, x, question, Color.PROMPTS)
     stdscr.refresh()
-    try:
-        # answer = stdscr.getstr(y, len(question) + x, answer_length).decode(encoding="utf-8")
-        answer = input_field(stdscr, y, len(question) + x, answer_length)
-    except (UnicodeDecodeError, KeyboardInterrupt):
-        answer = ""
-        logging.warning("Incorrect characters in user input.")
-    curses.noecho()
-    curses.curs_set(False)
+
+    # Move the cursor to the last lines of the terminal and to the beginning of the line
+    rows, _ = stdscr.getmaxyx()
+    amount_of_rows_prompt_toolkit_takes = 4
+    extra_space = 2 # for prettiness
+
+    # Go to (max_y - 10, 0). This moves the cursor 10 lines before the end of the terminal
+    #   and to the first character
+    sys.stdout.write(f'\033[{rows - amount_of_rows_prompt_toolkit_takes - extra_space};0H')
+    sys.stdout.flush()
+
+    if placeholder is not None:
+        placeholder_formatted = FormattedText([
+            ('#787878', placeholder),
+        ])
+    else:
+        placeholder_formatted = None 
+    
+    answer = prompt_toolkit.prompt(message=question, default=default, reserve_space_for_menu=amount_of_rows_prompt_toolkit_takes, placeholder=placeholder_formatted, completer=autocomplete)
+    stdscr.refresh()
+    stdscr.keypad(True)  # This is used for us to be able to use KEY_* again
     return answer
 
 
-def input_integer(stdscr, y, x, question):
+def input_integer(stdscr, y, x, question, is_index=True):
     """Ask user for an integer number and check if it is an integer"""
-    number = input_string(stdscr, y, x, question, 3)
+    number = input_string(stdscr, y, x, question)
     try:
-        number = int(number) - 1
+        number = int(number)
+        if is_index:
+            number -= 1
     except (ValueError, KeyboardInterrupt):
         logging.warning("Incorrect number input.")
         return None
     return number
 
+def input_status(stdscr, y, x):
+    """Ask user for an integer representing a task status"""
+    question = []
+    for status_enum in Status:
+        question.append(f"{status_enum.value}={status_enum}")
+    question_str = ", ".join(question)
+    question_str += " : " 
+    number = input_integer(stdscr, y, x, question_str, is_index=False)
+    try:
+        return Status(number)
+    except ValueError:
+        logging.error("Invalid status number entered")
+        return None
+
+def input_importance(stdscr, y, x):
+    """Ask user for an integer representing task importance"""
+    question_str = "levels: Optional - can be deferred, Low - nice to have, Medium - far future, High - near future, Critical - ASAP" 
+    display_question(stdscr, y - 1, x, question_str, Color.PROMPTS)
+
+    question_str = "Undecided (0), Optional (1-2), Low (3-4), Medium (5-6), High (7-8), Critical (9-10): " 
+    number = input_integer(stdscr, y, x, question_str, is_index=False)
+    try:
+        return Importance(number)
+    except ValueError:
+        logging.error("Invalid importance number entered")
+        return None
 
 def input_date(stdscr, y, x, prompt_string):
     """Ask user to input date in YYYY/MM/DD format and check if it was a valid entry"""
-    date_unformatted = input_string(stdscr, y, x, prompt_string, 10)
+    date_unformatted = input_string(stdscr, y, x, prompt_string)
     try:
         year = int(date_unformatted.split("/")[0])
         month = int(date_unformatted.split("/")[1])

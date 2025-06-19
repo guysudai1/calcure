@@ -19,27 +19,28 @@ class TaskView(View):
     @property
     def color(self):
         """Select the color depending on the status"""
-        if self.task.status == Status.DONE:
-            return Color.DONE
-        if self.task.status == Status.IMPORTANT:
-            return Color.IMPORTANT
-        if self.task.status == Status.UNIMPORTANT:
-            return Color.UNIMPORTANT
-        return Color.TODO
+        match self.task.status:
+            case Status.NOT_STARTED:
+                return Color.NOT_STARTED
+            case Status.WIP:
+                return Color.WIP
+            case Status.CURRENT_MISSION:
+                return Color.CURRENT_MISSION
+            case Status.WAITING:
+                return Color.WAITING
+            case Status.DONE:
+                return Color.DONE
+            case _:
+                raise NotImplementedError("Unrecognized status")
 
     @property
     def icon(self):
         """Select the icon for the task"""
         icon = global_config.TODO_ICON
-        if global_config.DISPLAY_ICONS:
-            for keyword in global_config.ICONS:
-                if keyword in self.task.name.lower():
-                    icon = global_config.ICONS[keyword]
 
-        if self.task.status == Status.DONE:
-            icon = global_config.DONE_ICON
-        if self.task.status == Status.IMPORTANT:
-            icon = global_config.IMPORTANT_ICON
+        if self.task.collapse:
+            icon = "+"
+
         return icon
 
     @property
@@ -47,13 +48,19 @@ class TaskView(View):
         """Icon and name of the task, which is decorated if needed"""
         name = self.task.name
         if self.screen.privacy or self.task.privacy:
-            return f'{global_config.TODO_ICON} {global_config.PRIVACY_ICON * len(name)}'
+            return f'{global_config.PRIVACY_ICON * len(name)}'
+
+        if global_config.DISPLAY_ICONS:
+            for keyword in global_config.CUSTOM_ICONS:
+                icon = global_config.CUSTOM_ICONS[keyword]
+                keyword = f"@{keyword}"
+                name = name.replace(keyword, icon)
 
         if self.task.status == Status.DONE and global_config.STRIKETHROUGH_DONE:
             strike = "\u0336"
-            info_str = f'{self.icon} {strike}{strike.join(name)}{strike}'
+            info_str = f'{strike}{strike.join(name)}{strike}'
         else:
-            info_str = f'{self.icon} {name}'
+            info_str = f'{name}'
 
         if self.task.collapse:
             info_str += f" {global_config.COLLAPSED_ICON}"
@@ -62,7 +69,13 @@ class TaskView(View):
 
     def render(self):
         """Render a line with an icon, task, deadline, and timer"""
-        self.display_line(self.y, self.x + self.task_indent + 4, self.info, self.color)
+        icon_indent = self.x + self.task_indent + 4
+        self.display_line(self.y, icon_indent, self.icon, Color.PROMPTS)
+        importance_indent = icon_indent + 2
+        self.display_line(self.y, importance_indent, f"({self.task.importance.value})", Color.IMPORTANCE)
+        max_importance = "(10) "
+
+        self.display_line(self.y, importance_indent + len(max_importance), self.info, self.color)
 
         deadline_indentation = self.screen.x_min + 6 + len(self.info) + self.task_indent
         deadline_view = TaskDeadlineView(self.stdscr, self.y, deadline_indentation, self.task)
