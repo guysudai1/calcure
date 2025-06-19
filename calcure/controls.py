@@ -84,7 +84,14 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
                 user_tasks.toggle_task_collapse(task)
-        
+
+        # Modify extra info
+        if screen.key == 'o':
+            number = input_integer(stdscr, MSG_TS_EXTRA_INFO_TASK)
+            if number is not None and user_tasks.is_valid_number(number):
+                task = user_tasks.viewed_ordered_tasks[number]
+                user_tasks.edit_and_display_extra_info(task)
+
         # Timer operations:
         if screen.key == 't':
             number = input_integer(stdscr, MSG_TM_ADD)
@@ -156,7 +163,11 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                     delete_children_as_well = ask_confirmation(stdscr, "Delete all children too?", True)
                 else:
                     delete_children_as_well = False
-                user_tasks.delete_task(task.item_id, delete_children_as_well)
+                
+                if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                    user_tasks.archive_task(task.item_id, delete_children_as_well)
+                else:
+                    user_tasks.delete_task(task.item_id, delete_children_as_well)
 
         if screen.key == 'm':
             number_from = input_integer(stdscr, MSG_TS_MOVE)
@@ -214,7 +225,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                 return
 
         # If we need to select a task, change to selection mode:
-        selection_keys = ['t', 'T', 'v', 'u', 'i', 's', 'd', 'x', 'e', 'r', 'c', 'A', 'm', '.', 'f', 'F']
+        selection_keys = ['t', 'T', 'v', 'u', 'i', 's', 'd', 'x', 'e', 'r', 'c', 'A', 'm', '.', 'f', 'F', 'o']
         if screen.key in selection_keys and user_tasks.viewed_ordered_tasks:
             screen.selection_mode = True
 
@@ -307,11 +318,20 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                     restore_children_as_well = False
                 
                 user_tasks.restore_item_from_archive_with_children(task, restore_children_as_well)
+
+
+        # Modify extra info
+        if screen.key == 'o':
+            number = input_integer(stdscr, MSG_TS_EXTRA_INFO_TASK)
+            if number is not None and user_tasks.is_valid_archive_number(number):
+                task = user_tasks.viewed_archived_ordered_tasks[number]
+                user_tasks.edit_and_display_extra_info(task)
+
     else:
         # Getting user's input:
         screen.key = stdscr.getkey()
 
-        if screen.key in ["x"]:
+        if screen.key in ["x", "o"]:
             screen.selection_mode = True
 
         handle_screen_transfer_keys(stdscr, screen, screen.key)

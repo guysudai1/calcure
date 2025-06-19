@@ -79,7 +79,7 @@ def input_status(stdscr):
         question.append(f"{status_enum.value}={status_enum}")
     question_str = ", ".join(question)
     question_str += " : " 
-    number = input_integer(stdscr, question_str, is_index=False)
+    number = input_integer(stdscr, "New task status: ",  is_index=False, bottom_toolbar=question_str)
     try:
         return Status(number)
     except ValueError:
@@ -112,6 +112,10 @@ def input_date(stdscr, prompt_string):
 
 amount_of_rows_prompt_toolkit_takes = 4
 
+def move_cursor_to_x_y(x: int, y: int):
+    sys.stdout.write(f'\033[{x};{y}H')
+    sys.stdout.flush()
+
 def move_cursor_to_input_position(stdscr: curses.window):
     stdscr.refresh()
 
@@ -121,8 +125,7 @@ def move_cursor_to_input_position(stdscr: curses.window):
 
     # Go to (max_y - 10, 0). This moves the cursor 10 lines before the end of the terminal
     #   and to the first character
-    sys.stdout.write(f'\033[{rows - amount_of_rows_prompt_toolkit_takes - extra_space};0H')
-    sys.stdout.flush()
+    move_cursor_to_x_y(rows - amount_of_rows_prompt_toolkit_takes - extra_space, 0)
 
 def ask_confirmation(stdscr: curses.window, question, confirmations_enabled):
     """Ask user confirmation for an action"""

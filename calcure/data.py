@@ -8,9 +8,12 @@ import time
 import enum
 from typing import List
 
+import prompt_toolkit
+
 from calcure.classes.task import RootTask, Task
 from calcure.classes.timer import Timer
 from calcure.consts import Importance, Status
+from calcure.dialogues import move_cursor_to_x_y
 from calcure.singletons import global_config
 
 
@@ -71,27 +74,18 @@ class Tasks:
         self.task_tree.clear()
         self.changed = True
 
-    def _get_ordered_tasks(self, hide_collapsed: bool, hide_archived: bool) -> List[Task]:
-        task_list = []
-
-        for task in self.task_tree:
-            task_list.append(task)
-            task_list.extend(self.flatten_children_ordered(task, hide_collapsed=hide_collapsed, hide_archived=hide_archived))
-
-        return task_list
-
     @property
     def all_ordered_tasks(self):
-        return self._get_ordered_tasks(hide_collapsed=False, hide_archived=False)
+        return self.flatten_children_ordered(self.root_task, hide_collapsed=False, hide_archived=False)
 
     @property
     def viewed_ordered_tasks(self):
-        viewed_tasks = self._get_ordered_tasks(hide_collapsed=True, hide_archived=True)
-        return [task for task in viewed_tasks if not task.is_archived]
+        return self.flatten_children_ordered(self.root_task, hide_collapsed=True, hide_archived=True)
     
     @property
     def viewed_archived_ordered_tasks(self):
-        return [task for task in self.all_ordered_tasks if task.is_archived]
+        archived_tasks = self.flatten_children_ordered(self.root_task, hide_collapsed=False, hide_archived=False)
+        return [task for task in archived_tasks if task.is_archived]
     
     def is_valid_number(self, number: int):
         """Check if input is valid and corresponds to an item"""
@@ -123,9 +117,26 @@ class Tasks:
 
     def _archive_task(self, task: Task):
         task.archive_date = datetime.now()
+        self.changed = True
 
     def _unarchive_task(self, task: Task):
         task.archive_date = None
+        self.changed = True
+
+    def archive_task(self, task_id: int, archive_children: bool):
+        task_to_archive = self.get_task_by_id(task_id)
+        assert isinstance(task_to_archive, Task), "Cannot archive root task"
+
+        if archive_children:
+            tasks_to_archive = self.flatten_children_ordered(task_to_archive, hide_collapsed=False, hide_archived=False)
+        else:
+            tasks_to_archive = []
+
+        tasks_to_archive.append(task_to_archive)
+        for task in tasks_to_archive:
+            self._archive_task(task)
+        
+        self.changed = True
 
     def delete_task(self, task_id, delete_children):
         assert task_id != 0, "Cannot delete root task"
@@ -133,18 +144,12 @@ class Tasks:
         task_to_remove = self.get_task_by_id(task_id)
         assert isinstance(task_to_remove, Task), "Cannot delete root task"
 
-        if global_config.ADD_TO_ARCHIVE_ON_DELETE:
-            self._archive_task(task_to_remove)
-        else:
-            self._delete_task_from_parents(task_to_remove, strict=True)        
+        self._delete_task_from_parents(task_to_remove, strict=True)        
 
         for child_task in task_to_remove.children:
             if not delete_children:
                 self.update_parent(child_task, task_to_remove.parent_id, delete_from_parent=False)
             elif delete_children:
-                if global_config.ADD_TO_ARCHIVE_ON_DELETE:
-                    self._archive_task(child_task)
-
                 # No need to do anything here, because the parent's reference will go with the children
                 pass
         
@@ -208,6 +213,11 @@ class Tasks:
         self.add_item(child_task)
         self.changed = True
 
+    def edit_and_display_extra_info(self, task: Task):
+        move_cursor_to_x_y(0, 0)
+        task.extra_info = prompt_toolkit.prompt(multiline=True, wrap_lines=True, default=task.extra_info, bottom_toolbar="Use MOD+Enter to save the note")
+        self.changed = True
+
     def add_timestamp_for_task(self, task: Task):
         """Add a timestamp to this task"""
         task.timer.stamps.append(int(time.time()))
@@ -237,12 +247,17 @@ class Tasks:
         nodes_to_go_over = parent_task.children.copy()
         while nodes_to_go_over:
             current_node = nodes_to_go_over.pop(0)
-            flattened_list.append(current_node)
+            
+            if hide_collapsed and current_node.collapse:
+                flattened_list.append(current_node)    
+                continue
 
-            if not hide_collapsed or not current_node.collapse:
-                nodes_to_go_over = current_node.children + nodes_to_go_over
-            elif not hide_archived or not current_node.archive_date is not None:
-                nodes_to_go_over = current_node.children + nodes_to_go_over
+            nodes_to_go_over = current_node.children + nodes_to_go_over
+            
+            if hide_archived and current_node.is_archived:
+                continue 
+
+            flattened_list.append(current_node)
 
         return flattened_list
 

@@ -1,6 +1,9 @@
 from datetime import date
 from typing import List
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import History
+
 from calcure.classes.timer import Timer
 from calcure.consts import Importance, Status
 
@@ -23,6 +26,7 @@ class Task:
         self.privacy: bool = privacy
         self.collapse: bool = collapse
         self.importance: Importance = importance
+        self.extra_info: str = ""
 
         """
         Task Timer

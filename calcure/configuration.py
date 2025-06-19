@@ -79,6 +79,7 @@ class Config:
                 "important_icon":            "‣",
                 "separator_icon":            "│",
                 "deadline_icon":             "⚑",
+                "extra_info_icon":           "💾",
                 }
 
         conf["Colors"] = {
@@ -231,6 +232,7 @@ class Config:
             # Icons:
             self.PRIVACY_ICON     = conf.get("Parameters", "privacy_icon", fallback="•") if self.DISPLAY_ICONS else "·"
             self.SEPARATOR_ICON   = conf.get("Parameters", "separator_icon", fallback="│")
+            self.EXTRA_INFO_ICON   = conf.get("Parameters", "extra_info_icon", fallback="💾")
             self.DEADLINE_ICON    = conf.get("Parameters", "deadline_icon", fallback="⚑") if self.DISPLAY_ICONS else "·"
             try:
                 self.CUSTOM_ICONS = {word: icon for (word, icon) in conf.items("Event icons")}

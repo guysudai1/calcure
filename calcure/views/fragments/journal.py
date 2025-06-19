@@ -35,7 +35,8 @@ class JournalView(View):
         for index, task in enumerate(relevant_task_list, start=self.screen.offset):
             if self.y + 1 >= self.screen.y_max:
                 break
-            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen, indent=self.user_tasks.get_indent_count(task))
+            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen, indent=self.user_tasks.get_indent_count(task),
+                                 parent=self.user_tasks.get_task_by_id(task.parent_id))
             task_view.render()
             if self.screen.selection_mode and self.screen.state == AppState.JOURNAL:
                 self.display_line(self.y, self.x, str(index + 1), Color.ACTIVE_PANE)

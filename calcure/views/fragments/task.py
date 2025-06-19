@@ -1,6 +1,6 @@
 
 from calcure.base_view import View
-from calcure.classes.task import Task
+from calcure.classes.task import RootTask, Task
 from calcure.colors import Color
 from calcure.data import Status
 from calcure.singletons import global_config
@@ -10,11 +10,12 @@ from calcure.views.fragments.timer import TimerView
 class TaskView(View):
     """Display a single task"""
 
-    def __init__(self, stdscr, y, x, task: Task, screen, indent: int):
+    def __init__(self, stdscr, y, x, task: Task, screen, indent: int, parent: Task|RootTask):
         super().__init__(stdscr, y, x)
         self.task = task
         self.screen = screen
         self.task_indent = indent
+        self.parent = parent
 
     @property
     def color(self):
@@ -33,6 +34,12 @@ class TaskView(View):
             case _:
                 raise NotImplementedError("Unrecognized status")
 
+    def is_task_parent_ghost(self):
+        if isinstance(self.parent, RootTask):
+            return False
+
+        return self.parent.is_archived != self.task.is_archived
+    
     @property
     def icon(self):
         """Select the icon for the task"""
@@ -64,6 +71,15 @@ class TaskView(View):
 
         if self.task.archive_date:
             info_str += f" (Archived on: {self.task.archive_date})"
+
+        if self.is_task_parent_ghost():
+            parent_short_name = self.parent.name
+            if len(parent_short_name) > 10:
+                parent_short_name = f"{parent_short_name[:10]}..."
+            info_str += f" [belongs to ghost: '{parent_short_name}']"
+
+        if self.task.extra_info.strip():
+            info_str += f" {global_config.EXTRA_INFO_ICON}"
 
         if self.task.collapse:
             info_str += f" {global_config.COLLAPSED_ICON}"
