@@ -21,7 +21,7 @@ class Screen:
         self.refresh_now = True
         self.reload_data = False
         self.delayed_action = False
-        self.key = None
+        self.key: str|None = None
         self.day = self.today.day
         self.month = self.today.month
         self.year = self.today.year

@@ -57,6 +57,7 @@ class Config:
                 "cut_titles_by_cell_length": "No",
                 "ask_confirmations":         "Yes",
                 "ask_confirmation_to_quit":  "Yes",
+                "add_to_archive_on_delete":  "Yes",
                 "use_unicode_icons":         "Yes",
                 "show_current_time":         "No",
                 "show_holidays":             "Yes",
@@ -70,6 +71,7 @@ class Config:
                 "split_screen":              "No",
                 "right_pane_percentage":     "25",
                 "journal_header":            "JOURNAL",
+                "archive_header":            "ARCHIVE",
                 "event_icon":                "•",
                 "privacy_icon":              "•",
                 "done_icon":                 "✔",
@@ -171,6 +173,7 @@ class Config:
             self.SHOW_KEYBINDINGS          = conf.getboolean("Parameters", "show_keybindings", fallback=True)
             self.ASK_CONFIRMATIONS         = conf.getboolean("Parameters", "ask_confirmations", fallback=True)
             self.ASK_CONFIRMATION_TO_QUIT  = conf.getboolean("Parameters", "ask_confirmation_to_quit", fallback=True)
+            self.ADD_TO_ARCHIVE_ON_DELETE  = conf.getboolean("Parameters", "add_to_archive_on_delete", fallback=True)
             self.SHOW_CURRENT_TIME         = conf.getboolean("Parameters", "show_current_time", fallback=True)
             self.DISPLAY_ICONS             = conf.getboolean("Parameters", "use_unicode_icons", fallback=True)
             self.PRIVACY_MODE              = conf.getboolean("Parameters", "privacy_mode", fallback=False)
@@ -182,6 +185,7 @@ class Config:
 
             # Journal settings:
             self.JOURNAL_HEADER        = conf.get("Parameters", "journal_header", fallback="JOURNAL")
+            self.ARCHIVE_HEADER        = conf.get("Parameters", "archive_header", fallback="ARCHIVE")
             self.SHOW_KEYBINDINGS      = conf.getboolean("Parameters", "show_keybindings", fallback=True)
             self.DONE_ICON             = conf.get("Parameters", "done_icon", fallback="✔") if self.DISPLAY_ICONS else "×"
             self.TODO_ICON             = conf.get("Parameters", "todo_icon", fallback="•") if self.DISPLAY_ICONS else "·"
@@ -237,7 +241,8 @@ class Config:
             
             self.data_folder = conf.get("Parameters", "folder_with_datafiles", fallback=self.config_folder)
             self.data_folder = Path(self.data_folder).expanduser()
-            self.TASKS_FILE = self.data_folder / "tasks.csv"
+            self.TASKS_FILE = self.data_folder / "tasks"
+            self.ARCHIVE_FILE = self.data_folder / "archive_tasks"
 
         except Exception:
             ERR_FILE1 = "Looks like there is a problem in your config.ini file. Perhaps you edited it and entered a wrong line. "

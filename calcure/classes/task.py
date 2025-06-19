@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List
 
 from calcure.classes.timer import Timer
@@ -35,6 +36,15 @@ class Task:
         self.month: int = month
         self.day: int = day
         self.children: List[Task] = []
+
+        """
+        Archive variables
+        """
+        self.archive_date: date|None = None
+
+    @property
+    def is_archived(self):
+        return self.archive_date is not None
 
     def __eq__(self, other):
         if isinstance(other, Task):

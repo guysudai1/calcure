@@ -26,9 +26,12 @@
     ☐ Allow to create tags
 ☐ Change user interface documentation (move to calendar....)
 ✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
-☐ Expanding extra information for missions
+☐ Expanding extra information for missions @started(25-06-19 14:09)
 ☐ Shared missions, sync across different clients
-☐ Archive missions (create new archive view) @started(25-06-19 09:34)
+✔ Archive missions (create new archive view) @started(25-06-19 09:37) @done(25-06-19 14:08) @lasted(4h31m26s)
+    ✔ Create archive screen @done(25-06-19 11:12)
+    ✔ Add missions to archive on delete @done(25-06-19 11:12)
+    ✔ Add option to revert back archived missions to task list @started(25-06-19 11:13) @done(25-06-19 14:08) @lasted(2h55m24s)
 ✔ Remove calendar from default view @done(25-06-17 15:34)
 ✔ Remove extra translations and unneccesary lean @done(25-06-17 15:34)
 ☐ Workspaces

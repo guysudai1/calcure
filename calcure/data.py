@@ -1,5 +1,6 @@
 """Module provides datatypes used in the program"""
 
+from datetime import datetime
 import logging
 from pathlib import Path
 import shelve
@@ -10,6 +11,7 @@ from typing import List
 from calcure.classes.task import RootTask, Task
 from calcure.classes.timer import Timer
 from calcure.consts import Importance, Status
+from calcure.singletons import global_config
 
 
 class Tasks:
@@ -20,20 +22,43 @@ class Tasks:
         self._shelve_file: shelve.Shelf = self._initialize_shelve()
         self.task_tree: List[Task] = self._shelve_file["task_tree"]
         self.root_task = RootTask(self.task_tree)
+        self._last_save_time = None
         self.changed = False
 
     def cleanup(self):
-        self._shelve_file.sync()
-        self._shelve_file.close()
+        self._shelve_file.close()  # calls sync inside of it 
 
-    def save_changes_and_reopen_shelve(self):
-        self._shelve_file.sync()
-        self._shelve_file.close()
+    def _save_changes_and_reopen_shelve(self):
+        self._shelve_file.close()  # calls sync inside of it 
 
         # Re-initialize shelve file
         self._shelve_file: shelve.Shelf = self._initialize_shelve()
         self.task_tree: List[Task] = self._shelve_file["task_tree"]
         self.root_task = RootTask(self.task_tree)
+
+    def save_if_needed(self):
+        if not self.changed:
+            return 
+    
+        if self._last_save_time is None:
+            self._save_changes_and_reopen_shelve()
+            self._last_save_time = time.time()
+            self.changed = False
+        
+        time_passed = time.time() - self._last_save_time
+        if time_passed >= global_config.JOURNAL_SAVE_INTERVAL:
+            self._save_changes_and_reopen_shelve()
+            self._last_save_time = time.time()
+            self.changed = False
+
+    def restore_item_from_archive_with_children(self, task: Task, restore_children: bool):
+        task.archive_date = None
+
+        if restore_children:
+            children = self.flatten_children_ordered(task, hide_collapsed=True, hide_archived=False)
+            for child_task in children:
+                if child_task.is_archived:
+                    child_task.archive_date = None
 
     def _initialize_shelve(self):
         shelf: shelve.Shelf = shelve.open(self._shelve_filename, writeback=True, protocol=4)
@@ -46,27 +71,35 @@ class Tasks:
         self.task_tree.clear()
         self.changed = True
 
-    def _get_ordered_tasks(self, hide_collapsed: bool) -> List[Task]:
+    def _get_ordered_tasks(self, hide_collapsed: bool, hide_archived: bool) -> List[Task]:
         task_list = []
 
         for task in self.task_tree:
             task_list.append(task)
-            if not hide_collapsed or not task.collapse:
-                task_list.extend(self.flatten_children_ordered(task, hide_collapsed=True))
+            task_list.extend(self.flatten_children_ordered(task, hide_collapsed=hide_collapsed, hide_archived=hide_archived))
 
         return task_list
 
     @property
     def all_ordered_tasks(self):
-        return self._get_ordered_tasks(hide_collapsed=False)
+        return self._get_ordered_tasks(hide_collapsed=False, hide_archived=False)
 
     @property
     def viewed_ordered_tasks(self):
-        return self._get_ordered_tasks(hide_collapsed=True)
+        viewed_tasks = self._get_ordered_tasks(hide_collapsed=True, hide_archived=True)
+        return [task for task in viewed_tasks if not task.is_archived]
+    
+    @property
+    def viewed_archived_ordered_tasks(self):
+        return [task for task in self.all_ordered_tasks if task.is_archived]
     
     def is_valid_number(self, number: int):
         """Check if input is valid and corresponds to an item"""
         return 0 <= number < len(self.viewed_ordered_tasks)
+
+    def is_valid_archive_number(self, number: int):
+        """Check if input is valid and corresponds to an item"""
+        return 0 <= number < len(self.viewed_archived_ordered_tasks)
 
     def change_item_importance(self, task: Task, new_importance: Importance):
         """Change task importance"""
@@ -88,16 +121,30 @@ class Tasks:
         task.privacy = not task.privacy
         self.changed = True
 
+    def _archive_task(self, task: Task):
+        task.archive_date = datetime.now()
+
+    def _unarchive_task(self, task: Task):
+        task.archive_date = None
+
     def delete_task(self, task_id, delete_children):
         assert task_id != 0, "Cannot delete root task"
 
-        task_to_remove: Task = self.get_task_by_id(task_id)
-        self._delete_task_from_parents(task_to_remove)        
+        task_to_remove = self.get_task_by_id(task_id)
+        assert isinstance(task_to_remove, Task), "Cannot delete root task"
+
+        if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+            self._archive_task(task_to_remove)
+        else:
+            self._delete_task_from_parents(task_to_remove, strict=True)        
 
         for child_task in task_to_remove.children:
             if not delete_children:
                 self.update_parent(child_task, task_to_remove.parent_id, delete_from_parent=False)
             elif delete_children:
+                if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                    self._archive_task(child_task)
+
                 # No need to do anything here, because the parent's reference will go with the children
                 pass
         
@@ -107,14 +154,19 @@ class Tasks:
         task.name = new_name
         self.changed = True
 
-    def _delete_task_from_parents(self, task: Task):
+    def _delete_task_from_parents(self, task: Task, strict: bool = False):
         parent_task = self.get_task_by_id(task.parent_id)
-        parent_task.children.remove(task)
+    
+        if strict:
+            assert task in parent_task.children, "Cannot find task in parent"
+
+        if task in parent_task.children:
+            parent_task.children.remove(task)
         self.changed = True
 
     def get_indent_count(self, task):
         indent = 0
-        while task.parent_id != 0:
+        while task.item_id != 0:
             indent += 1
             task = self.get_task_by_id(task.parent_id)
     
@@ -131,7 +183,7 @@ class Tasks:
 
     def update_parent(self, item: Task, new_parent_id: int, delete_from_parent: bool):
         if delete_from_parent:
-            self._delete_task_from_parents(item)
+            self._delete_task_from_parents(item, strict=True)
 
         item.parent_id = new_parent_id
         parent_task = self.get_task_by_id(item.parent_id)
@@ -179,14 +231,17 @@ class Tasks:
         task.day = new_day
         self.changed = True
 
-    def flatten_children_ordered(self, parent_task: Task|RootTask, hide_collapsed: bool = False):
+    def flatten_children_ordered(self, parent_task: Task|RootTask, hide_collapsed: bool = False, hide_archived: bool = True):
         """ This returns the task list ordered by which one will be displayed first """
         flattened_list: List[Task] = []
         nodes_to_go_over = parent_task.children.copy()
         while nodes_to_go_over:
             current_node = nodes_to_go_over.pop(0)
             flattened_list.append(current_node)
+
             if not hide_collapsed or not current_node.collapse:
+                nodes_to_go_over = current_node.children + nodes_to_go_over
+            elif not hide_archived or not current_node.archive_date is not None:
                 nodes_to_go_over = current_node.children + nodes_to_go_over
 
         return flattened_list
@@ -258,4 +313,3 @@ class Tasks:
         if self.is_empty():
             return 1
         return max([item.item_id for item in self.all_ordered_tasks]) + 1
-

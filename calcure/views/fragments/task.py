@@ -62,6 +62,9 @@ class TaskView(View):
         else:
             info_str = f'{name}'
 
+        if self.task.archive_date:
+            info_str += f" (Archived on: {self.task.archive_date})"
+
         if self.task.collapse:
             info_str += f" {global_config.COLLAPSED_ICON}"
 

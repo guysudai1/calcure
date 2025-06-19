@@ -20,9 +20,11 @@ from calcure.controls import *
 
 # Language:
 from calcure.translations.en import *
+from calcure.views.fragments.archive import ArchiveView
 from calcure.views.fragments.error import ErrorView
 from calcure.views.fragments.footer import FooterView
 from calcure.views.fragments.seperator import SeparatorView
+from calcure.views.screens.archive import ArchiveScreenView
 from calcure.views.screens.help import HelpScreenView
 from calcure.views.screens.journal import JournalScreenView
 from calcure.views.screens.welcome import WelcomeScreenView
@@ -50,6 +52,7 @@ def main(stdscr) -> None:
     footer_view = FooterView(stdscr, 0, 0, screen)
     separator_view = SeparatorView(stdscr, 0, 0, screen)
     error_view = ErrorView(stdscr, 0, 0, screen)
+    archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
 
     try:
         # Show welcome screen on the first run:
@@ -82,6 +85,10 @@ def main(stdscr) -> None:
             elif screen.state == AppState.HELP:
                 help_screen_view.render()
                 control_help_screen(stdscr, screen)
+            
+            elif screen.state == AppState.ARCHIVE:
+                archive_view.render()
+                control_archive_screen(stdscr, screen, user_tasks)
 
             else:
                 break
