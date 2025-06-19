@@ -38,6 +38,16 @@ def safe_run(func):
 
 HEADER_FIELD_COUNT = 2
 
+def handle_screen_movement(screen: Screen, key: str|None):
+    if key in ["KEY_DOWN"]:
+        screen.change_offset_forwards(step_count=1)
+    elif key in ["KEY_UP"]:
+        screen.change_offset_backwards(step_count=1)
+    elif key in ["KEY_PPAGE"]:
+        screen.change_offset_backwards(step_count=6)
+    elif key in ["KEY_NPAGE"]:
+        screen.change_offset_forwards(step_count=6)
+
 def handle_screen_transfer_keys(stdscr, screen: Screen, key: str|None):
     if key is None:
         return False
@@ -256,14 +266,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             if confirmed:
                 user_tasks.delete_all_items()
 
-        if screen.key in ["KEY_DOWN"]:
-            screen.change_offset_forwards(step_count=1)
-        elif screen.key in ["KEY_UP"]:
-            screen.change_offset_backwards(step_count=1)
-        elif screen.key in ["KEY_PPAGE"]:
-            screen.change_offset_backwards(step_count=6)
-        elif screen.key in ["KEY_NPAGE"]:
-            screen.change_offset_forwards(step_count=6)
+        handle_screen_movement(screen, screen.key)
 
         # Reload:
         if screen.key in ["Q"]:
@@ -334,4 +337,6 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
         if screen.key in ["x", "o"]:
             screen.selection_mode = True
 
+        handle_screen_movement(screen, screen.key)
+        
         handle_screen_transfer_keys(stdscr, screen, screen.key)

@@ -13,7 +13,7 @@ class Screen:
     def __init__(self, stdscr, global_config: Config):
         self.stdscr = stdscr
         self.privacy = global_config.PRIVACY_MODE
-        self.state = global_config.DEFAULT_VIEW
+        self._state = global_config.DEFAULT_VIEW
         self.split = global_config.SPLIT_SCREEN
         self.right_pane_percentage = global_config.RIGHT_PANE_PERCENTAGE
         self.currently_drawn = self.state
@@ -26,6 +26,16 @@ class Screen:
         self.month = self.today.month
         self.year = self.today.year
         self.offset = 0
+        
+
+    @property
+    def state(self):
+        return self._state
+    
+    @state.setter
+    def state(self, new_state):
+        self.offset = 0
+        self._state = new_state
         
     @property
     def is_active_pane(self):

@@ -13,6 +13,7 @@ class Error():
     def __init__(self, file):
         self.buffer = io.StringIO()
         self.file = file
+        self.clear_indication = False
 
         # Start logging errors:
         logging.basicConfig(level=logging.INFO,

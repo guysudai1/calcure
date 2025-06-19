@@ -27,14 +27,18 @@
 ☐ Change user interface documentation (move to calendar....)
 ✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
 ✔ Expanding extra information for missions @started(25-06-19 14:09) @done(25-06-19 17:03) @lasted(2h54m27s)
-☐ Shared missions, sync across different clients
+☐ Shared missions, sync across different clients @started(25-06-19 18:18)
+    ☐ Workspaces
+        ☐ Add feature to choose which file you are working on
+    ✔ Implement lock mechanism that will work locally and on NFS @started(25-06-19 18:27) @done(25-06-19 19:30) @lasted(1h3m28s)
 ✔ Archive missions (create new archive view) @started(25-06-19 09:37) @done(25-06-19 14:08) @lasted(4h31m26s)
     ✔ Create archive screen @done(25-06-19 11:12)
     ✔ Add missions to archive on delete @done(25-06-19 11:12)
     ✔ Add option to revert back archived missions to task list @started(25-06-19 11:13) @done(25-06-19 14:08) @lasted(2h55m24s)
 ✔ Remove calendar from default view @done(25-06-17 15:34)
 ✔ Remove extra translations and unneccesary lean @done(25-06-17 15:34)
-☐ Workspaces
+☐ Better code for the configuration mechanism
+☐ Make more things configurable
 
 
 Mission status:

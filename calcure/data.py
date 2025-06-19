@@ -1,6 +1,6 @@
 """Module provides datatypes used in the program"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 import shelve
@@ -9,12 +9,13 @@ import enum
 from typing import List
 
 import prompt_toolkit
+from flufl.lock import Lock
 
 from calcure.classes.task import RootTask, Task
 from calcure.classes.timer import Timer
 from calcure.consts import Importance, Status
 from calcure.dialogues import move_cursor_to_x_y
-from calcure.singletons import global_config
+from calcure.singletons import error, global_config
 
 
 class Tasks:
@@ -22,20 +23,34 @@ class Tasks:
 
     def __init__(self, filename: Path):
         self._shelve_filename = filename
-        self._shelve_file: shelve.Shelf = self._initialize_shelve()
+        self._shelve_file: shelve.Shelf | None = self._initialize_shelve()
         self.task_tree: List[Task] = self._shelve_file["task_tree"]
         self.root_task = RootTask(self.task_tree)
         self._last_save_time = None
         self.changed = False
 
+        lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT) # Maximum timeout to wait for lock
+        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME)  # Maximum time to write the file will be 10 minutes
+        self.tasks_lock = Lock(str(global_config.TASKS_FILE_LOCK), lifetime=lock_lifetime, default_timeout=lock_acquire_timeout)
+
+    def _write_to_shelve_file(self):
+        assert self._shelve_file is not None
+
+        logging.info("Saving file...")
+        with self.tasks_lock:
+            self._shelve_file.close()  # calls sync inside of it 
+            self._shelve_file = None # Invalidate shelve file
+        
+        error.clear_indication = True
+
     def cleanup(self):
-        self._shelve_file.close()  # calls sync inside of it 
+        self._write_to_shelve_file()
 
     def _save_changes_and_reopen_shelve(self):
-        self._shelve_file.close()  # calls sync inside of it 
+        self._write_to_shelve_file()
 
         # Re-initialize shelve file
-        self._shelve_file: shelve.Shelf = self._initialize_shelve()
+        self._shelve_file = self._initialize_shelve()
         self.task_tree: List[Task] = self._shelve_file["task_tree"]
         self.root_task = RootTask(self.task_tree)
 

@@ -27,7 +27,6 @@ class Config:
         self.create_config_file()
         self.read_config_file_from_user_arguments()
         self.read_config_file()
-        self.read_parameters_from_user_arguments()
 
 
     def shorten_path(self, path):
@@ -192,6 +191,11 @@ class Config:
             self.TODO_ICON             = conf.get("Parameters", "todo_icon", fallback="•") if self.DISPLAY_ICONS else "·"
             self.IMPORTANT_ICON        = conf.get("Parameters", "important_icon", fallback="‣") if self.DISPLAY_ICONS else "!"
             self.REFRESH_INTERVAL      = int(conf.get("Parameters", "refresh_interval", fallback=1))
+            self.LOCK_ACQUIRE_TIMEOUT      = int(conf.get("Parameters", "lock_acquire_timeout", fallback=600)) # 10 minutes
+            self.LOCK_LIFETIME      = int(conf.get("Parameters", "lock_lifetime", fallback=580)) # 9 minutes and 40 seconds
+
+            assert self.LOCK_LIFETIME < self.LOCK_ACQUIRE_TIMEOUT, "If the lifetime is smaller than the acquiriation timeout then we might not catch the lock"
+
             self.DATA_RELOAD_INTERVAL  = int(conf.get("Parameters", "data_reload_interval", fallback=0))
             self.RIGHT_PANE_PERCENTAGE = int(conf.get("Parameters", "right_pane_percentage", fallback=25))
             self.ONE_TIMER_AT_A_TIME   = conf.getboolean("Parameters", "one_timer_at_a_time", fallback=False)
@@ -244,7 +248,7 @@ class Config:
             self.data_folder = conf.get("Parameters", "folder_with_datafiles", fallback=self.config_folder)
             self.data_folder = Path(self.data_folder).expanduser()
             self.TASKS_FILE = self.data_folder / "tasks"
-            self.ARCHIVE_FILE = self.data_folder / "archive_tasks"
+            self.TASKS_FILE_LOCK = self.data_folder / "tasks.lock"
 
         except Exception:
             ERR_FILE1 = "Looks like there is a problem in your config.ini file. Perhaps you edited it and entered a wrong line. "
@@ -265,26 +269,4 @@ class Config:
         except getopt.GetoptError:
             pass
 
-
-    def read_parameters_from_user_arguments(self):
-        """Read user arguments that were provided at the run. This values take priority over config.ini"""
-        try:
-            opts, _ = getopt.getopt(sys.argv[1:],"pjhvid",["folder=", "config=", "task=", "event="])
-            for opt, arg in opts:
-                if opt in '--folder':
-                    self.data_folder = Path(arg).expanduser()
-                    self.data_folder.mkdir(exist_ok=True)
-                    self.TASKS_FILE = self.data_folder / "tasks.csv"
-                elif opt == '-p':
-                    self.PRIVACY_MODE = True
-                elif opt == '-j':
-                    self.DEFAULT_VIEW = AppState.JOURNAL
-                elif opt in ('-h'):
-                    self.DEFAULT_VIEW = AppState.HELP
-                elif opt in ('-v'):
-                    self.DEFAULT_VIEW = AppState.EXIT
-                    print ('Calcure - version 3.2.1')
-        except getopt.GetoptError as e_message:
-            logging.error("Invalid user arguments. %s", e_message)
-            pass
 

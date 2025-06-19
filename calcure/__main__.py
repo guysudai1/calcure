@@ -88,6 +88,7 @@ def main(stdscr) -> None:
             
             elif screen.state == AppState.ARCHIVE:
                 archive_view.render()
+                error_view.render()
                 control_archive_screen(stdscr, screen, user_tasks)
 
             else:
