@@ -50,15 +50,17 @@ class Task:
         """
         Deadline variables
         """
-        self.year: int = year
-        self.month: int = month
-        self.day: int = day
+        self.deadline: date|None = None
         self.children: List[Task] = []
 
         """
         Archive variables
         """
         self.archive_date: date|None = None
+
+    @property
+    def has_deadline(self):
+        return self.deadline is not None
 
     @property
     def is_archived(self):

@@ -3,7 +3,6 @@
 import datetime
 import logging
 
-from calcure.calendars import Calendar
 from calcure.configuration import Config
 from calcure.consts import AppState
 
@@ -14,7 +13,6 @@ class Screen:
         self.stdscr = stdscr
         self.privacy = global_config.PRIVACY_MODE
         self._state = global_config.DEFAULT_VIEW
-        self.split = global_config.SPLIT_SCREEN
         self.right_pane_percentage = global_config.RIGHT_PANE_PERCENTAGE
         self.currently_drawn = self.state
         self.selection_mode = False
@@ -60,20 +58,12 @@ class Screen:
     def x_max(self):
         """Calculate the right boundary of the screen"""
         _, x_max = self.stdscr.getmaxyx()
-        if x_max < 40:
-            self.split = False
-        if self.split and self.currently_drawn != AppState.JOURNAL:
-            return x_max - self.journal_pane_width
         return x_max
 
     @property
     def x_min(self):
         """Calculate the left boundary of the screen"""
         _, x_max = self.stdscr.getmaxyx()
-        if x_max < self.journal_pane_width:
-            self.split = False
-        if self.split and self.currently_drawn == AppState.JOURNAL:
-            return x_max - self.journal_pane_width + 2
         return 0
 
     def change_offset_forwards(self, step_count: int):
@@ -91,16 +81,3 @@ class Screen:
     def today(self):
         """Return todays's date in datetime format"""
         return datetime.date.today()
-
-    @property
-    def number_of_weeks(self) -> int:
-        """Calculate how many weeks are in this month"""
-        return len(Calendar(0).monthdayscalendar(self.year, self.month))
-
-    def is_valid_date(self, year, month, day) -> bool:
-        """Check if a date corresponds to any actually existing date"""
-        if None in [year, month, day]:
-            return False
-        if 1 <= month <= 12:
-            return 0 < day <= Calendar(0).last_day(year, month)
-        return False

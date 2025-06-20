@@ -1,6 +1,7 @@
 """ Module that controls interactions with the user, like questions and confirmations"""
 
 import curses
+from datetime import datetime
 from email.errors import InvalidMultipartContentTransferEncodingDefect
 import logging
 import sys
@@ -147,13 +148,10 @@ def input_date(stdscr, prompt_string):
     """Ask user to input date in YYYY/MM/DD format and check if it was a valid entry"""
     date_unformatted = input_string(stdscr, prompt_string)
     try:
-        year = int(date_unformatted.split("/")[0])
-        month = int(date_unformatted.split("/")[1])
-        day = int(date_unformatted.split("/")[2])
-        return year, month, day
+        return datetime.strptime(date_unformatted, r'%Y/%m/%d').date()
     except (ValueError, IndexError, KeyboardInterrupt):
         logging.warning("Incorrect date input.")
-        return None, None, None
+        return None
 
 amount_of_rows_prompt_toolkit_takes = 4
 

@@ -23,7 +23,6 @@ from calcure.translations.en import *
 from calcure.views.fragments.archive import ArchiveView
 from calcure.views.fragments.error import ErrorView
 from calcure.views.fragments.footer import FooterView
-from calcure.views.fragments.seperator import SeparatorView
 from calcure.views.screens.archive import ArchiveScreenView
 from calcure.views.screens.help import HelpScreenView
 from calcure.views.screens.journal import JournalScreenView
@@ -52,7 +51,6 @@ def main(stdscr) -> None:
     help_screen_view = HelpScreenView(stdscr, 0, 0, screen)
     welcome_screen_view = WelcomeScreenView(stdscr, 0, 0, screen)
     footer_view = FooterView(stdscr, 0, 0, screen)
-    separator_view = SeparatorView(stdscr, 0, 0, screen)
     error_view = ErrorView(stdscr, 0, 0, screen)
     archive_view: ArchiveScreenView|None = None
     workspaces_view = WorkspaceManagerScreenView(stdscr, 0, 0, screen, workspaces)
@@ -74,9 +72,6 @@ def main(stdscr) -> None:
 
             # Journal screen:
             if screen.state == AppState.JOURNAL:
-                if screen.split:
-                    separator_view.render()
-                
                 if journal_screen_view is not None:
                     journal_screen_view.render()
                 else:

@@ -49,8 +49,6 @@ class Config:
                 "folder_with_datafiles":     self.shorten_path(self.config_folder),
                 "log_file":                  self.shorten_path(self.log_file),
                 "language":                  "en",
-                "default_view":              "journal",
-                "default_calendar_view":     "monthly",
                 "show_keybindings":          "Yes",
                 "privacy_mode":              "No",
                 "cut_titles_by_cell_length": "No",
@@ -58,7 +56,7 @@ class Config:
                 "ask_confirmation_to_quit":  "Yes",
                 "add_to_archive_on_delete":  "Yes",
                 "use_unicode_icons":         "Yes",
-                "show_current_time":         "No",
+                "show_current_time":         "Yes",
                 "show_holidays":             "Yes",
                 "show_nothing_planned":      "Yes",
                 "one_timer_at_a_time":       "No",
@@ -91,14 +89,13 @@ class Config:
                 "color_waiting":         "230",
                 "color_done":            "40",
                 "color_title":           "4",
-                "color_calendar_header": "4",
+                "color_header": "4",
                 "color_timer":           "2",
                 "color_timer_paused":    "7",
                 "color_time":            "7",
                 "color_deadlines":       "3",
                 "color_active_pane":     "2",
                 "color_separator":       "7",
-                "color_calendar_border": "7",
                 "color_background":      "-1",
                 }
 
@@ -169,7 +166,6 @@ class Config:
             # Reading default view:
             self.DEFAULT_VIEW = AppState.WIZARD
             
-            # Calendar settings:
             self.SHOW_KEYBINDINGS          = conf.getboolean("Parameters", "show_keybindings", fallback=True)
             self.ASK_CONFIRMATIONS         = conf.getboolean("Parameters", "ask_confirmations", fallback=True)
             self.ASK_CONFIRMATION_TO_QUIT  = conf.getboolean("Parameters", "ask_confirmation_to_quit", fallback=True)
@@ -177,7 +173,6 @@ class Config:
             self.SHOW_CURRENT_TIME         = conf.getboolean("Parameters", "show_current_time", fallback=True)
             self.DISPLAY_ICONS             = conf.getboolean("Parameters", "use_unicode_icons", fallback=True)
             self.PRIVACY_MODE              = conf.getboolean("Parameters", "privacy_mode", fallback=False)
-            self.SPLIT_SCREEN              = conf.getboolean("Parameters", "split_screen", fallback=False)
             self.SHOW_NOTHING_PLANNED      = conf.getboolean("Parameters", "show_nothing_planned", fallback=True)
             self.LANG                      = conf.get("Parameters", "language", fallback="en")
             self.LOG_FILE                  = conf.get("Parameters", "log_file", fallback=self.log_file)
@@ -202,7 +197,6 @@ class Config:
             self.COLLAPSED_ICON = "\u21AA"
             self.JOURNAL_SAVE_INTERVAL        = float(conf.get("Parameters", "save_interval", fallback=10))
 
-            # Calendar colors:
             self.COLOR_HINTS           = int(conf.get("Colors", "color_hints", fallback=CursesColor.WHITE.value))
             self.COLOR_PROMPTS         = int(conf.get("Colors", "color_prompts", fallback=CursesColor.WHITE.value))
             self.COLOR_DEADLINES       = int(conf.get("Colors", "color_deadlines", fallback=CursesColor.YELLOW.value))
@@ -211,10 +205,9 @@ class Config:
             self.COLOR_TIMER_PAUSED    = int(conf.get("Colors", "color_timer_paused", fallback=CursesColor.WHITE.value))
             self.COLOR_TIME            = int(conf.get("Colors", "color_time", fallback=CursesColor.WHITE.value))
             self.COLOR_BACKGROUND      = int(conf.get("Colors", "color_background", fallback=-CursesColor.RED.value))
-            self.COLOR_CALENDAR_HEADER = int(conf.get("Colors", "color_calendar_header", fallback=CursesColor.BLUE.value))
+            self.COLOR_HEADER = int(conf.get("Colors", "color_header", fallback=CursesColor.BLUE.value))
             self.COLOR_ACTIVE_PANE     = int(conf.get("Colors", "color_active_pane", fallback=CursesColor.GREEN.value))
             self.COLOR_SEPARATOR       = int(conf.get("Colors", "color_separator", fallback=CursesColor.WHITE.value))
-            self.COLOR_CALENDAR_BORDER = int(conf.get("Colors", "color_calendar_border", fallback=CursesColor.WHITE.value))
 
             # Journal colors:
             self.COLOR_NOT_STARTED           = int(conf.get("Colors", "color_not_started", fallback=38))
@@ -249,8 +242,6 @@ class Config:
             
             self.data_folder = conf.get("Parameters", "folder_with_datafiles", fallback=self.config_folder)
             self.data_folder = Path(self.data_folder).expanduser()
-            self.TASKS_FILE = self.data_folder / "tasks"
-            self.TASKS_FILE_LOCK = self.data_folder / "tasks.lock"
             self.WORKSPACES_FILE = self.data_folder / "workspaces"
             self.WORKSPACES_LOCK_FILE = self.data_folder / "workspaces.lock"
 

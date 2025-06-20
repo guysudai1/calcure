@@ -1,61 +1,69 @@
 """English translations of the program interface"""
 
 MSG_WELCOME_1 = "Welcome to Calcure"
-MSG_WELCOME_2 = "Your terminal calendar and task manager!"
+MSG_WELCOME_2 = "Your terminal task manager!"
 MSG_WELCOME_3 = "Config and data files were created at:"
 MSG_WELCOME_4 = "For support, contribution, and additional information, visit:"
 MSG_WELCOME_5 = "Press ? to see all keybindings or any other key to continue."
 
 TITLE_KEYS_GENERAL = "GENERAL KEYBINDINGS"
-TITLE_KEYS_CALENDAR = "CALENDAR KEYBINDINGS"
+TITLE_KEYS_WORKSPACE = "WORKSPACE KEYBINDINGS"
+TITLE_KEYS_ARCHIVE = "ARCHIVE KEYBINDINGS"
 TITLE_KEYS_JOURNAL  = "JOURNAL KEYBINDINGS"
 
 KEYS_GENERAL = {
-        " Space ": "Switch between calendar and journal",
-        "   /   ": "Toggle split screen",
-        "   *   ": "Toggle global privacy",
+        " Space ": "Switch between archive and journal",
         "   ?   ": "Toggle this help",
         "   Q   ": "Reload",
         "   q   ": "Quit",
-        }
+        "  1-6  ": "Alternate between windows",
+}
 
-KEYS_CALENDAR = {
-        "  a(A) ": "Add a (recurring) event",
-        "   n   ": "Next month (day)",
-        "   p   ": "Previous month (day)",
-        "   x   ": "Delete an event",
-        "   r   ": "Rename an event",
-        "  m(M) ": "Move event (in this month)",
-        "  g(G) ": "Go to a certain day (in this month)",
-        "   v   ": "Toggle daily/monthly view",
-        "   h   ": "Toggle event as high priority",
-        "   l   ": "Toggle event as low priority",
-        "   d   ": "Toggle event as done",
-        "   .   ": "Toggle event privacy",
-        "   C   ": "Import events from calcurse",
-        "   R   ": "Return to current month (day)",
-        }
+KEYS_ARCHIVE = {
+        "   o   ": "View/Modify task's extra info",
+        "   /   ": "Apply filter to archived tasks",
+        "   x   ": "Restore to journal (supports children)",
+        " PGDWN ": "Go 6 tasks down",
+        " PGDUP ": "Go 6 tasks up",
+        "   ↑   ": "Go 1 task up",
+        "   ↓   ": "Go 1 task down",
+}
 
-KEYS_TODO = {
-        "  a(A) ": "Add new (sub)task",
-        "  h(H) ": "Toggle one (all) of the tasks as high priority",
-        "  l(L) ": "Toggle one (all) of the tasks as low priority",
-        "  d(D) ": "Toggle one (all) of the tasks as done",
-        "  u(U) ": "Unmark one (all) of the tasks",
-        "  x(X) ": "Delete one (all) of the tasks (with all subtasks)",
-        "  t(T) ": "Start/pause (remove) timer for a task",
-        "   r   ": "Rename a task",
-        "   s   ": "Toggle between task and subtask",
-        "   .   ": "Toggle task privacy",
-        "  f(F) ": "Change (remove) task deadline",
-        "   m   ": "Move a task",
-        "   C   ": "Import tasks from calcurse",
-        }
+KEYS_WORKSPACE = {
+        "   a   ": "Add",
+        "   l   ": "Load and go to journal",
+        "   x   ": "Delete",
+        " PGDWN ": "Go 6 workspaces down",
+        " PGDUP ": "Go 6 workspaces up",
+        "   ↑   ": "Go 1 workspace up",
+        "   ↓   ": "Go 1 workspace down",
+}
+
+KEYS_JOURNAL = {
+        " a(A)  ": "Add (sub)task",
+        "   o   ": "View/Modify extra info",
+        "   /   ": "Apply filter to journal tasks",
+        "   x   ": "Delete/Archive (supports children)",
+        "   X   ": "Delete/Archive all items",
+        "   m   ": "Move (supports children)",
+        "   e   ": "Exchange task locations",
+        "   r   ": "Rename",
+        "   c   ": "Collapse/Expand",
+        "   i   ": "Modify importance",
+        "   s   ": "Modify status",
+        "   d   ": "Mark as done",
+        "   .   ": "Toggle privacy mode",
+        "  t(T) ": "Start/Stop/(reset) timer",
+        "  f(F) ": "Apply/(reset) deadline",
+        " PGDWN ": "Go 6 tasks down",
+        " PGDUP ": "Go 6 tasks up",
+        "   ↑   ": "Go 1 task up",
+        "   ↓   ": "Go 1 task down",
+}
 
 MSG_NAME          = "CALCURE"
-MSG_VIM           = "Arrow and Vim keys (j, k, ZZ, ZQ) work as well!"
 MSG_INFO          = "For more information, visit:"
-MSG_SITE          = "https://anufrievroman.gitbook.io/calcure"
+MSG_SITE          = "https://github.com/guysudai1/calcure"
 MSG_EXIT          = "Really exit? "
 
 MSG_EVENT_HIGH    = "Mark as high priority event number: "
@@ -96,7 +104,11 @@ MSG_TS_RES        = "Restore task number: "
 MSG_WS_LOAD        = "Load workspace number: "
 MSG_TS_RES_ALL    = "Restore all tasks to journal?"
 MSG_TS_DEL        = "Delete task number: "
+MSG_TS_CHILDREN_DEL = "Delete all children too?"
+MSG_TS_CHILDREN_ARCHIVE = "Archive all children too?"
+MSG_TS_ARCHIVE = "Archive task number: "
 MSG_TS_DEL_ALL    = "Really delete all tasks?"
+MSG_TS_ARCHIVE_ALL    = "Really archive all tasks?"
 MSG_WS_DEL        = "Delete workspace number: "
 MSG_TS_EDT_ALL    = "Do you confirm this action?"
 MSG_TS_MOVE       = "Move task from number: "
@@ -119,8 +131,8 @@ MSG_INPUT         = "Incorrect input."
 MSG_GOTO          = "Go to date (YYYY/MM/DD): "
 MSG_GOTO_D        = "Go to date: "
 
-JOURNAL_HINT      = "Space · Switch to calendar   a · Add task   d · Done   i · Important   ? · All keybindings"
-ARCHIVE_HINT      = "Space · Switch to calendar   a · Add task   d · Done   i · Important   ? · All keybindings"
+JOURNAL_HINT      = "Space · Switch to archive   a · Add task   A · Add subtask   d · Done   s · Status   i · Importance   / · Filter  ? · All keybindings"
+ARCHIVE_HINT      = "Space · Switch to journal   x · Restore   o · Extra Info   / · Filter  ? · All keybindings"
 
 DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 DAYS_PERSIAN = ["SHANBEH", "YEKSHANBEH", "DOSHANBEH", "SESHANBEH", "CHAHARSHANBEH", "PANJSHANBEH", "JOMEH"]

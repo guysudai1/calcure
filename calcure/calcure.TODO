@@ -19,20 +19,25 @@
 ✔ Move to root @done(25-06-17 11:45)
 ✔ Better deserialization/serialization (json?) @started(25-06-17 11:45) @done(25-06-17 15:33) @lasted(3h48m30s)
 ✔ Support shelf to update the file @done(25-06-17 15:33)
-☐ Searching @started(25-06-20 10:44)
-    ☐ Filter by importance levels
-    ☐ Filter by name
-    ☐ Filter by content
-☐ Tagging/Badges
-    ☐ Allow to create tags
-☐ Change user interface documentation (move to calendar....)
+✔ Searching @started(25-06-20 10:44) @done(25-06-20 12:25) @lasted(1h41m41s)
+    ✔ Filter by importance levels @done(25-06-20 12:25)
+    ✔ Filter by name @done(25-06-20 12:25)
+    ✔ Filter by content @done(25-06-20 12:25)
+✘ Tagging/Badges @cancelled(25-06-20 12:26)
+    ✘ Allow to create tags @cancelled(25-06-20 12:26)
+☐ Change user interface documentation (move to calendar....) @started(25-06-20 12:27)
+    ✔ Modify bottom toolbars @started(25-06-20 12:28) @done(25-06-20 13:55) @lasted(1h27m40s)
+    ☐ Make sure all messages make sense
+    ☐ Update README @started(25-06-20 13:55)
+    ✔ Update help screen @done(25-06-20 13:11)
 ✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
 ✔ Expanding extra information for missions @started(25-06-19 14:09) @done(25-06-19 17:03) @lasted(2h54m27s)
-✔ Shared missions, sync across different clients @started(25-06-19 18:18) @done(25-06-20 10:43) @lasted(16h25m59s)
+☐ Shared missions, sync across different clients @started(25-06-19 18:18)
     ✔ Workspaces @done(25-06-20 10:43)
         ✔ Add feature to choose which file you are working on @started(25-06-19 19:35) @done(25-06-20 10:43) @lasted(15h8m58s)
         ✔ View windows at bottom of screen @done(25-06-20 10:44)
     ✔ Implement lock mechanism that will work locally and on NFS @started(25-06-19 18:27) @done(25-06-19 19:30) @lasted(1h3m28s)
+    ☐ Let the client know live taht their task changed
 ✔ Archive missions (create new archive view) @started(25-06-19 09:37) @done(25-06-19 14:08) @lasted(4h31m26s)
     ✔ Create archive screen @done(25-06-19 11:12)
     ✔ Add missions to archive on delete @done(25-06-19 11:12)

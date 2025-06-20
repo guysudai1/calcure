@@ -14,7 +14,7 @@ class TimerView(View):
     @property
     def icon(self):
         """Return icon corresponding to timer state"""
-        TIMER_RUNS_ICON = "⏵" if global_config.DISPLAY_ICONS else "·"
+        TIMER_RUNS_ICON = "▶" if global_config.DISPLAY_ICONS else "·"
         TIMER_PAUSED_ICON = "⏯︎" if global_config.DISPLAY_ICONS else "·"
         return TIMER_RUNS_ICON if self.timer.is_counting else TIMER_PAUSED_ICON
 

@@ -91,16 +91,21 @@ class TaskView(View):
         icon_indent = self.x + self.task_indent + 4
         self.display_line(self.y, icon_indent, self.icon, Color.PROMPTS)
         importance_indent = icon_indent + 2
-        self.display_line(self.y, importance_indent, f"({self.task.importance.value})", Color.IMPORTANCE)
+
+        importance_value = f"({self.task.importance.value})"
+        self.display_line(self.y, importance_indent, importance_value, Color.IMPORTANCE)
         max_importance = "(10) "
 
         self.display_line(self.y, importance_indent + len(max_importance), self.info, self.color)
 
-        deadline_indentation = self.screen.x_min + 6 + len(self.info) + self.task_indent
-        deadline_view = TaskDeadlineView(self.stdscr, self.y, deadline_indentation, self.task)
-        deadline_view.render()
+        deadline_indentation = importance_indent + len(max_importance) + len(self.info) + 2
+        if self.task.has_deadline:
+            deadline_view = TaskDeadlineView(self.stdscr, self.y, deadline_indentation, self.task)
+            deadline_view.render()
 
-        addition_indentation = (deadline_view.has_deadline)*(4 + len(deadline_view.info))
+            addition_indentation = (2 + len(str(self.task.deadline)))
+        else:
+            addition_indentation = 0
         timer_indentation = deadline_indentation + addition_indentation
         timer_view = TimerView(self.stdscr, self.y, timer_indentation, self.task.timer)
         timer_view.render()

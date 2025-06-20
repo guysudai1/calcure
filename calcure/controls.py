@@ -83,6 +83,13 @@ def handle_screen_transfer_keys(stdscr, screen: Screen, key: str|None):
 
     return False
 
+def handle_reload_keys(screen: Screen, key: str|None):
+    # Reload:
+    if key in ["Q"]:
+        screen.reload_data = True
+        screen.refresh_now = True
+
+
 @safe_run
 def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Tasks):
     """Process user input on the journal screen"""
@@ -124,9 +131,8 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             number = input_integer(stdscr, MSG_TS_DEAD_ADD)
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
-                year, month, day = input_date(stdscr, MSG_TS_DEAD_DATE)
-                if screen.is_valid_date(year, month, day):
-                    user_tasks.change_deadline(task, year, month, day)
+                deadline_date = input_date(stdscr, MSG_TS_DEAD_DATE)
+                user_tasks.change_deadline(task, deadline_date)
 
         # Remove deadline:
         if screen.key == "F":
@@ -153,7 +159,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                 if new_status is not None:
                     user_tasks.change_item_status(task, new_status)
         
-        if screen.key in ['d', 'v']:
+        if screen.key == 'd':
             number = input_integer(stdscr, MSG_TS_DONE)
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
@@ -168,11 +174,18 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
 
         # Modify the task:
         if screen.key in ['x']:
-            number = input_integer(stdscr, MSG_TS_DEL)
+            msg = MSG_TS_DEL
+            if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                msg = MSG_TS_ARCHIVE
+            number = input_integer(stdscr, msg)
             if number is not None and user_tasks.is_valid_number(number):
                 task: Task = user_tasks.viewed_ordered_tasks[number]
                 if task.children:
-                    delete_children_as_well = ask_confirmation(stdscr, "Delete all children too?", True)
+                    msg = MSG_TS_CHILDREN_DEL
+                    if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                        msg = MSG_TS_CHILDREN_ARCHIVE
+
+                    delete_children_as_well = ask_confirmation(stdscr, msg, True)
                 else:
                     delete_children_as_well = False
                 
@@ -237,7 +250,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                 return
 
         # If we need to select a task, change to selection mode:
-        selection_keys = ['t', 'T', 'v', 'u', 'i', 's', 'd', 'x', 'e', 'r', 'c', 'A', 'm', '.', 'f', 'F', 'o']
+        selection_keys = ['t', 'T', 'u', 'i', 's', 'd', 'x', 'e', 'r', 'c', 'A', 'm', '.', 'f', 'F', 'o']
         if screen.key in selection_keys and user_tasks.viewed_ordered_tasks:
             screen.selection_mode = True
 
@@ -280,9 +293,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
         handle_screen_movement(screen, screen.key)
 
         # Reload:
-        if screen.key in ["Q"]:
-            screen.reload_data = True
-            screen.refresh_now = True
+        handle_reload_keys(screen, screen.key)
 
         handle_screen_transfer_keys(stdscr, screen, screen.key)
 
@@ -292,6 +303,7 @@ def control_help_screen(stdscr, screen):
     # Getting user's input:
     screen.key = stdscr.getkey()
 
+    handle_reload_keys(screen, screen.key)
     handle_screen_transfer_keys(stdscr, screen, screen.key)
 
 @safe_run
@@ -300,6 +312,7 @@ def control_welcome_screen(stdscr, screen):
     # Getting user's input:
     screen.key = stdscr.getkey()
 
+    handle_reload_keys(screen, screen.key)
     handle_screen_transfer_keys(stdscr, screen, screen.key)
     
 @safe_run
@@ -345,7 +358,7 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                 user_tasks.clear_filter()
 
         handle_screen_movement(screen, screen.key)
-
+        handle_reload_keys(screen, screen.key)
         handle_screen_transfer_keys(stdscr, screen, screen.key)
 
 @safe_run
@@ -387,7 +400,7 @@ def control_workspaces_screen(stdscr: curses.window, screen: Screen, workspaces:
             screen.selection_mode = True
 
         handle_screen_movement(screen, screen.key)
-
+        handle_reload_keys(screen, screen.key)
         handle_screen_transfer_keys(stdscr, screen, screen.key)
 
         # Add single task:

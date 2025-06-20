@@ -21,11 +21,8 @@ class HeaderView(View):
         title_view = TitleView(self.stdscr, 0, self.screen.x_min, self.title, self.screen)
         title_view.render()
 
-        if self.screen.currently_drawn == AppState.JOURNAL and self.screen.split:
-            return
-
         # Show time:
-        time_string = time.strftime("%H:%M", time.localtime())
+        time_string = time.strftime("%H:%M:%S", time.localtime())
         size_allows = len(time_string) < self.screen.x_max - len(self.title)
         if global_config.SHOW_CURRENT_TIME and size_allows:
-            self.display_line(0, (self.screen.x_max // 2 - 2), time_string, Color.TIME)
+            self.display_line(0, (self.screen.x_max // 2 - len(time_string) // 2), time_string, Color.TIME)

@@ -12,7 +12,4 @@ class TitleView(View):
 
     def render(self):
         """Render this view on the screen"""
-        if self.screen.is_active_pane and self.screen.split:
-            self.display_line(0, self.screen.x_min, self.title, Color.ACTIVE_PANE, global_config.BOLD_ACTIVE_PANE, global_config.UNDERLINED_ACTIVE_PANE)
-        else:
-            self.display_line(0, self.screen.x_min, self.title, Color.CALENDAR_HEADER, global_config.BOLD_TITLE, global_config.UNDERLINED_TITLE)
+        self.display_line(0, self.screen.x_min, self.title, Color.HEADER, global_config.BOLD_TITLE, global_config.UNDERLINED_TITLE)

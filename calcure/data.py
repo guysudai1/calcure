@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from curses import window
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import dbm
 import logging
 from pathlib import Path
@@ -314,11 +314,9 @@ class Tasks(Shelveable):
         task.timer.stamps = []
         self.changed = True
 
-    def change_deadline(self, task: Task, new_year, new_month, new_day):
+    def change_deadline(self, task: Task, deadline_date: date):
         """Reset the timer for one of the tasks"""
-        task.year = new_year
-        task.month = new_month
-        task.day = new_day
+        task.deadline = deadline_date
         self.changed = True
 
     def flatten_children_ordered(self, parent_task: Task|RootTask, hide_collapsed: bool = False, hide_archived: bool = True):
@@ -429,7 +427,7 @@ class Workspaces(Shelveable):
             self.workspace_loaded = None
 
         if delete_files:
-            for filepath in [workspace.workspace_path, workspace.workspace_lock]:
+            for filepath in [f"{workspace.workspace_path}.db", workspace.workspace_lock]:
                 delete_path = Path(filepath)
                 try:
                     if delete_path.is_file():
