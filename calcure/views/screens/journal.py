@@ -28,5 +28,5 @@ class JournalScreenView(View):
         header_view.render()
 
         # Display the tasks:
-        journal_view = JournalView(self.stdscr, 2, self.screen.x_min, self.user_tasks, self.screen)
+        journal_view = JournalView(self.stdscr, 1, 0, self.user_tasks, self.screen)
         journal_view.render()

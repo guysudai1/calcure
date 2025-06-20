@@ -6,18 +6,19 @@ from datetime import datetime, timedelta
 import dbm
 import logging
 from pathlib import Path
+import re
 import shelve
 import time
 import enum
-from typing import List
+from typing import Any, List
 
 import prompt_toolkit
 from flufl.lock import Lock
 
-from calcure.classes.task import RootTask, Task
+from calcure.classes.task import RootTask, Task, TaskFilter
 from calcure.classes.timer import Timer
 from calcure.classes.workspace import Workspace
-from calcure.consts import Importance, Status
+from calcure.consts import Filters, Importance, Status
 from calcure.dialogues import move_cursor_to_x_y
 from calcure.singletons import error, global_config
 
@@ -100,6 +101,7 @@ class Tasks(Shelveable):
 
     def __init__(self, filename: Path|str, lock_filename: Path|str):
         super().__init__(filename, lock_filename)
+        self._user_display_filter: TaskFilter|None = None
 
     def hook_initialize_shelf(self, shelf: shelve.Shelf):
         if "task_tree" not in shelf:
@@ -107,6 +109,21 @@ class Tasks(Shelveable):
         
         self.task_tree: List[Task] = shelf["task_tree"]
         self.root_task = RootTask(self.task_tree)
+
+    @property
+    def filter(self):
+        return self._user_display_filter
+
+    @filter.setter
+    def filter(self, new_filter: TaskFilter):
+        self._user_display_filter = new_filter
+
+    def clear_filter(self):
+        self._user_display_filter = None
+
+    @property
+    def has_filter(self):
+        return self._user_display_filter is not None
     
     @classmethod
     def from_workspace(cls, workspace: Workspace):
@@ -134,12 +151,20 @@ class Tasks(Shelveable):
 
     @property
     def viewed_ordered_tasks(self):
-        return self.flatten_children_ordered(self.root_task, hide_collapsed=True, hide_archived=True)
+        if self.has_filter:
+            # We want to see collapsed children here
+            all_tasks = self.flatten_children_ordered(self.root_task, hide_collapsed=False, hide_archived=True)
+            return [task for task in all_tasks if self._user_display_filter in task]
+        else:
+            return self.flatten_children_ordered(self.root_task, hide_collapsed=True, hide_archived=True)
     
     @property
     def viewed_archived_ordered_tasks(self):
-        archived_tasks = self.flatten_children_ordered(self.root_task, hide_collapsed=False, hide_archived=False)
-        return [task for task in archived_tasks if task.is_archived]
+        archived_tasks = [task for task in self.all_ordered_tasks if task.is_archived]
+        if self.has_filter:
+            return [task for task in archived_tasks if self._user_display_filter in task]
+        else:
+            return archived_tasks
     
     def is_valid_number(self, number: int):
         """Check if input is valid and corresponds to an item"""
@@ -386,8 +411,8 @@ class Tasks(Shelveable):
 
 
 class Workspaces(Shelveable):
-    def __init__(self, filename: Path):
-        super().__init__(filename, global_config.WORKSPACES_LOCK_FILE)
+    def __init__(self, filename: Path | str, lockfile: Path | str):
+        super().__init__(filename, lockfile)
         self.workspace_loaded: Workspace|None = None
 
     def cleanup(self):
@@ -396,15 +421,27 @@ class Workspaces(Shelveable):
     def is_valid_number(self, number: int):
         return 0 <= number < len(self.workspaces)
 
-    def delete_workspace(self, workspace: Workspace):
+    def delete_workspace(self, workspace: Workspace, delete_files: bool):
         if workspace in self.workspaces:
             self.workspaces.remove(workspace)
         
         if self.workspace_loaded == workspace:
             self.workspace_loaded = None
 
+        if delete_files:
+            for filepath in [workspace.workspace_path, workspace.workspace_lock]:
+                delete_path = Path(filepath)
+                try:
+                    if delete_path.is_file():
+                        delete_path.unlink()
+                except Exception as e:
+                    logging.error(e)
+        
+        self.changed = True
+
     def add_workspace(self, workspace: Workspace):
         self.workspaces.append(workspace)
+        self.changed = True
 
     def hook_initialize_shelf(self, shelf: shelve.Shelf):
         if "workspaces" not in shelf:

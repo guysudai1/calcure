@@ -262,6 +262,15 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
                 task_id = user_tasks.generate_id()
                 user_tasks.add_item(Task(task_id, task_name, Status.NOT_STARTED, [], False, parent_id=0))
 
+        if screen.key == "/":
+            filter_chosen = input_filter_field(stdscr, MSG_TS_FILTER, placeholder="Leave this empty to clear the filter", display_error=True)
+            if filter_chosen is not None:
+                filter_content = input_filter_content(stdscr, filter_chosen)
+                new_filter = TaskFilter(filter_chosen, filter_content)
+                user_tasks.filter = new_filter
+            else:
+                user_tasks.clear_filter()
+
         # Bulk operations:
         if screen.key in ["X"]:
             confirmed = ask_confirmation(stdscr, MSG_TS_DEL_ALL, global_config.ASK_CONFIRMATIONS)
@@ -326,6 +335,15 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
         if screen.key in ["x", "o"]:
             screen.selection_mode = True
 
+        if screen.key == "/":
+            filter_chosen = input_filter_field(stdscr, MSG_TS_FILTER, placeholder="Leave this empty to clear the filter", display_error=True)
+            if filter_chosen is not None:
+                filter_content = input_filter_content(stdscr, filter_chosen)
+                new_filter = TaskFilter(filter_chosen, filter_content)
+                user_tasks.filter = new_filter
+            else:
+                user_tasks.clear_filter()
+
         handle_screen_movement(screen, screen.key)
 
         handle_screen_transfer_keys(stdscr, screen, screen.key)
@@ -343,7 +361,8 @@ def control_workspaces_screen(stdscr: curses.window, screen: Screen, workspaces:
             if number is not None and workspaces.is_valid_number(number):
                 workspace: Workspace = workspaces.workspaces[number]
                 
-                workspaces.delete_workspace(workspace)
+                delete_files = ask_confirmation(stdscr, "Delete files? (Warning: this can not be reverted)", True)
+                workspaces.delete_workspace(workspace, delete_files)
 
         # Load workspace
         if screen.key == 'l':

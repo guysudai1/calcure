@@ -9,13 +9,15 @@ from prompt_toolkit.shortcuts import confirm
 
 from calcure.colors import Color
 from calcure.singletons import global_config
-from calcure.consts import Importance, Status
+from calcure.consts import Filters, Importance, Status
 
 import prompt_toolkit
 
 from calcure.screen import Screen
 from prompt_toolkit.completion import Completer, Completion, PathCompleter
 from prompt_toolkit.formatted_text import FormattedText
+
+from calcure.translations.en import MSG_TS_FILTER, MSG_TS_FILTER_EXTRA_INFO, MSG_TS_FILTER_NAME
 
 
 def safe_run(func):
@@ -64,7 +66,7 @@ def input_path(stdscr: curses.window, question, default="", placeholder: str|Non
     kwargs.pop("completer", None)  # Remove completer if we have one
     return input_string(stdscr, question, default, placeholder, PathCompleter(expanduser=True))
 
-def input_integer(stdscr, question, is_index=True, **kwargs):
+def input_integer(stdscr, question, is_index=True, display_error=True, **kwargs):
     """Ask user for an integer number and check if it is an integer"""
     number = input_string(stdscr, question, **kwargs)
     try:
@@ -72,15 +74,54 @@ def input_integer(stdscr, question, is_index=True, **kwargs):
         if is_index:
             number -= 1
     except (ValueError, KeyboardInterrupt):
-        logging.warning("Incorrect number input.")
+        if display_error:
+            logging.warning("Incorrect number input.")
         return None
     return number
+
+def input_filter_content(stdscr, filter_chosen: Filters):
+    match filter_chosen:
+        case Filters.NAME | Filters.EXTRA_INFO:
+            if filter_chosen == Filters.NAME:
+                msg = MSG_TS_FILTER_NAME
+            elif filter_chosen == Filters.EXTRA_INFO:
+                msg = MSG_TS_FILTER_EXTRA_INFO
+            else:
+                raise Exception("Invalid filter chosen")
+            filter_content = input_string(stdscr, msg)
+        case Filters.STATUS:
+            filter_content = input_status(stdscr)
+        case Filters.IMPORTANCE:
+            filter_content = input_importance(stdscr)
+        case _:
+            raise Exception("Invalid filter chosen")
+
+    return filter_content
+
+def input_filter_field(stdscr, question, **kwargs):
+    question = []
+    for filter_enum in Filters:
+        question.append(f"{filter_enum.value}={filter_enum.name}")
+    question_str = ", ".join(question)
+
+    kwargs["bottom_toolbar"] = question_str
+    display_error = kwargs.pop("display_error", True)
+    number = input_integer(stdscr, MSG_TS_FILTER, is_index=False, display_error=display_error, **kwargs)
+    if number is None:
+        return None
+
+    try:
+        filter_chosen = Filters(number)
+    except ValueError:
+        return None
+    
+    return filter_chosen
 
 def input_status(stdscr):
     """Ask user for an integer representing a task status"""
     question = []
     for status_enum in Status:
-        question.append(f"{status_enum.value}={status_enum}")
+        question.append(f"{status_enum.value}={status_enum.name}")
     question_str = ", ".join(question)
     question_str += " : " 
     number = input_integer(stdscr, "New task status: ",  is_index=False, bottom_toolbar=question_str)

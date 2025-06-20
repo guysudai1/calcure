@@ -30,5 +30,5 @@ class ArchiveScreenView(View):
         header_view.render()
 
         # Display the tasks:
-        journal_view = ArchiveView(self.stdscr, 2, self.screen.x_min, self.user_tasks, self.screen)
+        journal_view = ArchiveView(self.stdscr, 1, self.screen.x_min, self.user_tasks, self.screen)
         journal_view.render()

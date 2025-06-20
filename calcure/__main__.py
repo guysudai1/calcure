@@ -44,7 +44,7 @@ def main(stdscr) -> None:
     initialize_colors(global_config)
 
     user_tasks: Tasks|None = None
-    workspaces = Workspaces(global_config.WORKSPACES_FILE)
+    workspaces = Workspaces(global_config.WORKSPACES_FILE, global_config.WORKSPACES_LOCK_FILE)
 
     # Initialise screen views:
     app_view = View(stdscr, 0, 0)
@@ -122,8 +122,9 @@ def main(stdscr) -> None:
                 workspaces_view.render()
                 footer_view.render()
                 error_view.render()
-                user_tasks = control_workspaces_screen(stdscr, screen, workspaces)
-                if user_tasks is not None:
+                temp_user_tasks = control_workspaces_screen(stdscr, screen, workspaces)
+                if temp_user_tasks is not None:
+                    user_tasks = temp_user_tasks
                     journal_screen_view = JournalScreenView(stdscr, 0, 0, user_tasks, screen)
                     archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
             else:

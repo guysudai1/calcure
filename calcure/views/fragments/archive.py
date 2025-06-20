@@ -7,6 +7,7 @@ from calcure.data import Tasks
 from calcure.screen import Screen
 from calcure.singletons import global_config
 from calcure.translations.en import MSG_TS_NOTHING
+from calcure.views.fragments.filter import FilterView
 from calcure.views.fragments.status import TaskStatusView
 from calcure.views.fragments.task import TaskView
 
@@ -20,9 +21,6 @@ class ArchiveView(View):
 
     def render(self):
         """Render the list of tasks"""
-        if self.y == 0:
-            self.y += 1
-
         all_tasks = self.user_tasks.viewed_archived_ordered_tasks
 
         if not all_tasks and global_config.SHOW_NOTHING_PLANNED:
@@ -32,7 +30,14 @@ class ArchiveView(View):
 
         status_view = TaskStatusView(self.stdscr, self.y, self.x, self.screen, relevant_task_list, all_tasks)
         status_view.render()
+        self.y += 1
         
+        if self.user_tasks.has_filter:
+            assert self.user_tasks.filter is not None, "Shouldnt reach this"
+            filter_view = FilterView(self.stdscr, self.y, self.x, self.user_tasks.filter)
+            filter_view.render()
+            self.y += 1
+
         for index, task in enumerate(relevant_task_list, start=self.screen.offset):
             if self.y + 1 >= self.screen.y_max:
                 break

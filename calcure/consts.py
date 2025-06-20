@@ -13,6 +13,13 @@ class AppState(enum.Enum):
     ARCHIVE = 5
     WIZARD = 6
 
+class Filters(enum.Enum):
+    """Possible filters"""
+    NAME = 1
+    STATUS = 2
+    IMPORTANCE = 3
+    EXTRA_INFO = 4
+
 
 class Status(enum.Enum):
     """Status of tasks"""

@@ -11,5 +11,7 @@ class Workspace:
     def __eq__(self, other):
         if isinstance(other, Workspace):
             return self.workspace_path == other.workspace_path and self.workspace_lock == other.workspace_lock
+        elif other is None:
+            return False
 
         raise NotImplementedError()

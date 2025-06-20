@@ -1,11 +1,25 @@
 from datetime import date
-from typing import List
+import re
+from typing import Any, List
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import History
 
 from calcure.classes.timer import Timer
-from calcure.consts import Importance, Status
+from calcure.consts import Filters, Importance, Status
+
+class TaskFilter:
+    def __init__(self, filter_type, filter_content) -> None:
+        self.filter_type: Filters = filter_type
+        self.filter_content: Any = filter_content
+
+    def __str__(self):
+        if self.filter_type in [Filters.STATUS, Filters.IMPORTANCE]:
+            return f"{self.filter_type.name} == {self.filter_content}"
+        elif self.filter_type in [Filters.NAME, Filters.EXTRA_INFO]:
+            return f"{self.filter_type.name} regex '{self.filter_content}'"
+        
+        raise NotImplementedError()
 
 
 class Task:
@@ -55,7 +69,30 @@ class Task:
             return self.item_id == other.item_id
         
         raise NotImplementedError()
-
+    
+    def __contains__(self, user_filter):
+        if isinstance(user_filter, TaskFilter):
+            match user_filter.filter_type:
+                case Filters.NAME | Filters.EXTRA_INFO:
+                    if user_filter.filter_type == Filters.NAME:
+                        filter_field = self.name
+                    elif user_filter.filter_type == Filters.EXTRA_INFO:
+                        filter_field = self.extra_info
+                    else:
+                        raise Exception("Invalid filter type")
+                    
+                    return re.match(user_filter.filter_content, filter_field) is not None
+                case Filters.STATUS | Filters.IMPORTANCE:
+                    if user_filter.filter_type == Filters.STATUS:
+                        filter_field = self.status
+                    elif user_filter.filter_type == Filters.IMPORTANCE:
+                        filter_field = self.importance
+                    else:
+                        raise Exception("Invalid filter type")
+                    
+                    return filter_field == user_filter.filter_content
+        raise NotImplementedError()
+    
 class RootTask:
     """
     This is a fake item to use as the root of all other tasks
