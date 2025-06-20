@@ -116,8 +116,6 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             number = input_integer(stdscr, MSG_TM_ADD)
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
-                if global_config.ONE_TIMER_AT_A_TIME:
-                    user_tasks.pause_all_other_timers(task)
                 user_tasks.add_timestamp_for_task(task)
 
         if screen.key == 'T':
@@ -286,7 +284,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
 
         # Bulk operations:
         if screen.key in ["X"]:
-            confirmed = ask_confirmation(stdscr, MSG_TS_DEL_ALL, global_config.ASK_CONFIRMATIONS)
+            confirmed = ask_confirmation(stdscr, MSG_TS_DEL_ALL)
             if confirmed:
                 user_tasks.delete_all_items()
 

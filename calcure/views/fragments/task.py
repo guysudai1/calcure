@@ -54,7 +54,7 @@ class TaskView(View):
     def info(self):
         """Icon and name of the task, which is decorated if needed"""
         name = self.task.name
-        if self.screen.privacy or self.task.privacy:
+        if self.task.privacy:
             return f'{global_config.PRIVACY_ICON * len(name)}'
 
         if global_config.DISPLAY_ICONS:

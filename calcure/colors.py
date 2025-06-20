@@ -12,7 +12,6 @@ class Color(Enum):
     """Colors read from user config"""
     HINTS = auto()
     PROMPTS = auto()
-    CONFIRMATIONS = auto()
     TITLE = auto()
     TODO = auto()
     DONE = auto()
@@ -23,7 +22,6 @@ class Color(Enum):
     UNIMPORTANT = auto()
     HEADER = auto()
     ACTIVE_PANE = auto()
-    SEPARATOR = auto()
     EMPTY = auto()
     DEADLINES = auto()
 
@@ -48,13 +46,11 @@ def initialize_colors(global_config: Config):
 
     curses.init_pair(Color.HINTS.value, global_config.COLOR_HINTS, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.PROMPTS.value, global_config.COLOR_PROMPTS, global_config.COLOR_BACKGROUND)
-    curses.init_pair(Color.CONFIRMATIONS.value, global_config.COLOR_CONFIRMATIONS, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.TIMER.value, global_config.COLOR_TIMER, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.TIMER_PAUSED.value, global_config.COLOR_TIMER_PAUSED, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.TIME.value, global_config.COLOR_TIME, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.HEADER.value, global_config.COLOR_HEADER, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.ACTIVE_PANE.value, global_config.COLOR_ACTIVE_PANE, global_config.COLOR_BACKGROUND)
-    curses.init_pair(Color.SEPARATOR.value, global_config.COLOR_SEPARATOR, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.EMPTY.value, global_config.COLOR_BACKGROUND, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.DEADLINES.value, global_config.COLOR_DEADLINES, global_config.COLOR_BACKGROUND)
 

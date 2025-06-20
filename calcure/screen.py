@@ -11,9 +11,7 @@ class Screen:
     """Main state of the program that describes what is displayed and how"""
     def __init__(self, stdscr, global_config: Config):
         self.stdscr = stdscr
-        self.privacy = global_config.PRIVACY_MODE
         self._state = global_config.DEFAULT_VIEW
-        self.right_pane_percentage = global_config.RIGHT_PANE_PERCENTAGE
         self.currently_drawn = self.state
         self.selection_mode = False
         self.refresh_now = True
@@ -45,14 +43,6 @@ class Screen:
         """Get maximum size of the screen"""
         y_max, _ = self.stdscr.getmaxyx()
         return y_max
-
-    @property
-    def journal_pane_width(self):
-        """Calculate the width of the right pane if the value is adequate"""
-        _, x_max = self.stdscr.getmaxyx()
-        if 5 < self.right_pane_percentage < 95:
-            return int(x_max//(100/self.right_pane_percentage))
-        return x_max//4
 
     @property
     def x_max(self):

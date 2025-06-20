@@ -170,10 +170,8 @@ def move_cursor_to_input_position(stdscr: curses.window):
     #   and to the first character
     move_cursor_to_x_y(rows - amount_of_rows_prompt_toolkit_takes - extra_space, 0)
 
-def ask_confirmation(stdscr: curses.window, question, confirmations_enabled):
+def ask_confirmation(stdscr: curses.window, question):
     """Ask user confirmation for an action"""
-    if not confirmations_enabled:
-        return True
 
     move_cursor_to_input_position(stdscr)
     return confirm(message=question)

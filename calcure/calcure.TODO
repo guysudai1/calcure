@@ -25,10 +25,10 @@
     ✔ Filter by content @done(25-06-20 12:25)
 ✘ Tagging/Badges @cancelled(25-06-20 12:26)
     ✘ Allow to create tags @cancelled(25-06-20 12:26)
-☐ Change user interface documentation (move to calendar....) @started(25-06-20 12:27)
+✔ Change user interface documentation (move to calendar....) @started(25-06-20 12:27) @done(25-06-20 14:27) @lasted(2h30s)
     ✔ Modify bottom toolbars @started(25-06-20 12:28) @done(25-06-20 13:55) @lasted(1h27m40s)
-    ☐ Make sure all messages make sense
-    ☐ Update README @started(25-06-20 13:55)
+    ✔ Make sure all messages make sense @done(25-06-20 14:27)
+    ✔ Update README @started(25-06-20 13:55) @done(25-06-20 14:27) @lasted(32m28s)
     ✔ Update help screen @done(25-06-20 13:11)
 ✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
 ✔ Expanding extra information for missions @started(25-06-19 14:09) @done(25-06-19 17:03) @lasted(2h54m27s)
@@ -44,8 +44,8 @@
     ✔ Add option to revert back archived missions to task list @started(25-06-19 11:13) @done(25-06-19 14:08) @lasted(2h55m24s)
 ✔ Remove calendar from default view @done(25-06-17 15:34)
 ✔ Remove extra translations and unneccesary lean @done(25-06-17 15:34)
-☐ Better code for the configuration mechanism
-☐ Make more things configurable
+☐ Better code for the configuration mechanism @started(25-06-20 14:27)
+☐ Make more things configurable @started(25-06-20 14:27)
 
 
 Mission status:
