@@ -6,7 +6,7 @@ from calcure.data import Tasks
 from calcure.screen import Screen
 from calcure.singletons import global_config
 from calcure.translations.en import MSG_TS_NOTHING
-from calcure.views.fragments.status import StatusView
+from calcure.views.fragments.status import TaskStatusView
 from calcure.views.fragments.task import TaskView
 
 class JournalView(View):
@@ -29,7 +29,7 @@ class JournalView(View):
         
         relevant_task_list = all_tasks[self.screen.offset:]
 
-        status_view = StatusView(self.stdscr, self.y, self.x, self.screen, relevant_task_list, all_tasks)
+        status_view = TaskStatusView(self.stdscr, self.y, self.x, self.screen, relevant_task_list, all_tasks)
         status_view.render()
         
         for index, task in enumerate(relevant_task_list, start=self.screen.offset):

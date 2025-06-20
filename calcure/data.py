@@ -1,6 +1,9 @@
 """Module provides datatypes used in the program"""
 
+from abc import abstractmethod
+from curses import window
 from datetime import datetime, timedelta
+import dbm
 import logging
 from pathlib import Path
 import shelve
@@ -13,25 +16,53 @@ from flufl.lock import Lock
 
 from calcure.classes.task import RootTask, Task
 from calcure.classes.timer import Timer
+from calcure.classes.workspace import Workspace
 from calcure.consts import Importance, Status
 from calcure.dialogues import move_cursor_to_x_y
 from calcure.singletons import error, global_config
 
 
-class Tasks:
-    """List of tasks created by the user"""
-
-    def __init__(self, filename: Path):
-        self._shelve_filename = filename
+class Shelveable:
+    def __init__(self, shelve_filename: Path|str, lock_filename: Path|str) -> None:
+        """
+        Shelf file constants
+        """
+        self._shelve_filename = shelve_filename
         self._shelve_file: shelve.Shelf | None = self._initialize_shelve()
-        self.task_tree: List[Task] = self._shelve_file["task_tree"]
-        self.root_task = RootTask(self.task_tree)
+
+        """
+        File locking
+        """
+        lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT) # Maximum timeout to wait for lock
+        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME)  # Maximum time to write the file will be 10 minutes
+        self.tasks_lock = Lock(str(lock_filename), lifetime=lock_lifetime, default_timeout=lock_acquire_timeout)
+
+        """
+        Shelf file saving variables
+        """
         self._last_save_time = None
         self.changed = False
 
-        lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT) # Maximum timeout to wait for lock
-        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME)  # Maximum time to write the file will be 10 minutes
-        self.tasks_lock = Lock(str(global_config.TASKS_FILE_LOCK), lifetime=lock_lifetime, default_timeout=lock_acquire_timeout)
+    def _initialize_shelve(self):
+        try:
+            shelf: shelve.Shelf = shelve.open(self._shelve_filename, writeback=True, protocol=4)
+        except dbm.error as e:
+            display_error = ""
+            if hasattr(e, "strerror") and isinstance(e.strerror, str):
+                display_error += e.strerror + ": "
+            if hasattr(e, "filename") and isinstance(e.filename, str):
+                display_error += e.filename + " "
+
+            logging.error(display_error)
+            raise
+
+        self.hook_initialize_shelf(shelf)
+
+        return shelf
+    
+    @abstractmethod
+    def hook_initialize_shelf(self, shelf: shelve.Shelf):
+        raise NotImplementedError()
 
     def _write_to_shelve_file(self):
         assert self._shelve_file is not None
@@ -43,16 +74,11 @@ class Tasks:
         
         error.clear_indication = True
 
-    def cleanup(self):
-        self._write_to_shelve_file()
-
     def _save_changes_and_reopen_shelve(self):
         self._write_to_shelve_file()
 
         # Re-initialize shelve file
         self._shelve_file = self._initialize_shelve()
-        self.task_tree: List[Task] = self._shelve_file["task_tree"]
-        self.root_task = RootTask(self.task_tree)
 
     def save_if_needed(self):
         if not self.changed:
@@ -69,6 +95,26 @@ class Tasks:
             self._last_save_time = time.time()
             self.changed = False
 
+class Tasks(Shelveable):
+    """List of tasks created by the user"""
+
+    def __init__(self, filename: Path|str, lock_filename: Path|str):
+        super().__init__(filename, lock_filename)
+
+    def hook_initialize_shelf(self, shelf: shelve.Shelf):
+        if "task_tree" not in shelf:
+            shelf["task_tree"] = []
+        
+        self.task_tree: List[Task] = shelf["task_tree"]
+        self.root_task = RootTask(self.task_tree)
+    
+    @classmethod
+    def from_workspace(cls, workspace: Workspace):
+        return cls(workspace.workspace_path, workspace.workspace_lock)
+
+    def cleanup(self):
+        self._write_to_shelve_file()
+
     def restore_item_from_archive_with_children(self, task: Task, restore_children: bool):
         task.archive_date = None
 
@@ -77,13 +123,6 @@ class Tasks:
             for child_task in children:
                 if child_task.is_archived:
                     child_task.archive_date = None
-
-    def _initialize_shelve(self):
-        shelf: shelve.Shelf = shelve.open(self._shelve_filename, writeback=True, protocol=4)
-        if "task_tree" not in shelf:
-            shelf["task_tree"] = []
-
-        return shelf
 
     def delete_all_items(self):
         self.task_tree.clear()
@@ -228,9 +267,10 @@ class Tasks:
         self.add_item(child_task)
         self.changed = True
 
-    def edit_and_display_extra_info(self, task: Task):
+    def edit_and_display_extra_info(self, task: Task, stdscr: window):
         move_cursor_to_x_y(0, 0)
         task.extra_info = prompt_toolkit.prompt(multiline=True, wrap_lines=True, default=task.extra_info, bottom_toolbar="Use MOD+Enter to save the note")
+        stdscr.keypad(True)
         self.changed = True
 
     def add_timestamp_for_task(self, task: Task):
@@ -343,3 +383,32 @@ class Tasks:
         if self.is_empty():
             return 1
         return max([item.item_id for item in self.all_ordered_tasks]) + 1
+
+
+class Workspaces(Shelveable):
+    def __init__(self, filename: Path):
+        super().__init__(filename, global_config.WORKSPACES_LOCK_FILE)
+        self.workspace_loaded: Workspace|None = None
+
+    def cleanup(self):
+        self._write_to_shelve_file()
+
+    def is_valid_number(self, number: int):
+        return 0 <= number < len(self.workspaces)
+
+    def delete_workspace(self, workspace: Workspace):
+        if workspace in self.workspaces:
+            self.workspaces.remove(workspace)
+        
+        if self.workspace_loaded == workspace:
+            self.workspace_loaded = None
+
+    def add_workspace(self, workspace: Workspace):
+        self.workspaces.append(workspace)
+
+    def hook_initialize_shelf(self, shelf: shelve.Shelf):
+        if "workspaces" not in shelf:
+            shelf["workspaces"] = []
+
+        self.workspaces: List[Workspace] = shelf["workspaces"]
+        

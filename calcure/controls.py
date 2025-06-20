@@ -1,5 +1,6 @@
 """This module contains functions that react to user input on each screen"""
 
+from asyncio import tasks
 import curses
 import importlib
 
@@ -8,6 +9,7 @@ from calcure.classes.task import Task
 from calcure.classes.timer import Timer
 from calcure.consts import AppState, Status
 from calcure.data import *
+from calcure.data import Tasks
 from calcure.dialogues import *
 from calcure.configuration import Config
 from calcure.screen import Screen
@@ -23,7 +25,7 @@ def safe_run(func):
 
     def inner(stdscr, screen, *args, **kwargs):
         try:
-            func(stdscr, screen, *args, **kwargs)
+            return func(stdscr, screen, *args, **kwargs)
 
         # Handle keyboard interruption with ctrl+c:
         except KeyboardInterrupt:
@@ -100,7 +102,7 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             number = input_integer(stdscr, MSG_TS_EXTRA_INFO_TASK)
             if number is not None and user_tasks.is_valid_number(number):
                 task = user_tasks.viewed_ordered_tasks[number]
-                user_tasks.edit_and_display_extra_info(task)
+                user_tasks.edit_and_display_extra_info(task, stdscr)
 
         # Timer operations:
         if screen.key == 't':
@@ -281,14 +283,7 @@ def control_help_screen(stdscr, screen):
     # Getting user's input:
     screen.key = stdscr.getkey()
 
-    # Handle vim-style exit on "ZZ" and "ZQ":
-    if vim_style_exit(stdscr, screen):
-        confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
-        screen.state = AppState.EXIT if confirmed else screen.state
-
-    # Handle keys to exit the help screen:
-    if screen.key in [" ", "?", "q", "^[", "\x7f"]:
-        screen.state = AppState.JOURNAL
+    handle_screen_transfer_keys(stdscr, screen, screen.key)
 
 @safe_run
 def control_welcome_screen(stdscr, screen):
@@ -296,14 +291,8 @@ def control_welcome_screen(stdscr, screen):
     # Getting user's input:
     screen.key = stdscr.getkey()
 
-    # Handle key to call help screen:
-    if screen.key in ["?"]:
-        screen.state = AppState.HELP
-
-    # Otherwise, just start the program:
-    else:
-        screen.state = AppState.JOURNAL
-
+    handle_screen_transfer_keys(stdscr, screen, screen.key)
+    
 @safe_run
 def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Tasks):
     """Process user input on the welcome screen"""
@@ -328,7 +317,7 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             number = input_integer(stdscr, MSG_TS_EXTRA_INFO_TASK)
             if number is not None and user_tasks.is_valid_archive_number(number):
                 task = user_tasks.viewed_archived_ordered_tasks[number]
-                user_tasks.edit_and_display_extra_info(task)
+                user_tasks.edit_and_display_extra_info(task, stdscr)
 
     else:
         # Getting user's input:
@@ -338,5 +327,65 @@ def control_archive_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
             screen.selection_mode = True
 
         handle_screen_movement(screen, screen.key)
-        
+
         handle_screen_transfer_keys(stdscr, screen, screen.key)
+
+@safe_run
+def control_workspaces_screen(stdscr: curses.window, screen: Screen, workspaces: Workspaces) -> Tasks | None:
+    """Process user input on the welcome screen"""
+    
+    if screen.selection_mode:
+        screen.selection_mode = False
+
+        # Delete workspace
+        if screen.key == "x":
+            number = input_integer(stdscr, MSG_WS_DEL)
+            if number is not None and workspaces.is_valid_number(number):
+                workspace: Workspace = workspaces.workspaces[number]
+                
+                workspaces.delete_workspace(workspace)
+
+        # Load workspace
+        if screen.key == 'l':
+            number = input_integer(stdscr, MSG_WS_LOAD)
+            if number is not None and workspaces.is_valid_number(number):
+                workspace: Workspace = workspaces.workspaces[number]
+                
+                workspaces.workspace_loaded = workspace
+                try:
+                    user_tasks: Tasks | None = Tasks.from_workspace(workspace)
+                    screen.state = AppState.JOURNAL
+                except dbm.error:
+                    user_tasks: Tasks | None = None
+
+                return user_tasks
+
+    else:
+        # Getting user's input:
+        screen.key = stdscr.getkey()
+
+        if screen.key in ["x", "l"]:
+            screen.selection_mode = True
+
+        handle_screen_movement(screen, screen.key)
+
+        handle_screen_transfer_keys(stdscr, screen, screen.key)
+
+        # Add single task:
+        if screen.key == "a":
+            if screen.delayed_action:
+                # We delayed the action to move the offset
+                screen.delayed_action = False
+
+            amount_of_elements_on_screen = len(workspaces.workspaces[screen.offset:])
+            if amount_of_elements_on_screen >= screen.y_max - HEADER_FIELD_COUNT - 1:
+                # This means that we have more elements on the screen and we are at the edge
+                amount_of_elements_on_screen = 5
+                screen.offset = len(workspaces.workspaces) - amount_of_elements_on_screen
+                screen.refresh_now = True
+                screen.delayed_action = True
+                return
+
+            workspace_path = input_path(stdscr, MSG_WS_NEW_WORKSPACE, placeholder=MSG_WS_NEW_WORKSPACE_TIP)
+            if workspace_path:
+                workspaces.add_workspace(Workspace(workspace_path))

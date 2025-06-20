@@ -11,6 +11,7 @@ class AppState(enum.Enum):
     EXIT = 3
     WELCOME = 4
     ARCHIVE = 5
+    WIZARD = 6
 
 
 class Status(enum.Enum):

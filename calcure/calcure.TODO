@@ -11,7 +11,6 @@
 ✔ Add subtasks for a mission @done(25-06-19 09:34)
 ✔ Importance levels @started(25-06-17 15:39) @done(25-06-18 16:17) @lasted(1d38m38s)
 ✔ Collapsed missions @started(25-06-16 14:24) @done(25-06-16 15:30) @lasted(1h6m5s)
-☐ Filter by importance levels
 ✔ Better icons (only beginning with @) @started(25-06-18 18:09) @done(25-06-19 09:33) @lasted(15h24m46s)
     ✔ Dont use icons instead of the task * todo icon @started(25-06-18 18:08) @done(25-06-19 09:33) @lasted(15h25m46s)
     ✔ Improve prompt and add autosuggestions for icons @started(25-06-18 18:08) @done(25-06-18 18:46) @lasted(38m3s)
@@ -20,16 +19,19 @@
 ✔ Move to root @done(25-06-17 11:45)
 ✔ Better deserialization/serialization (json?) @started(25-06-17 11:45) @done(25-06-17 15:33) @lasted(3h48m30s)
 ✔ Support shelf to update the file @done(25-06-17 15:33)
-☐ Searching
-    ☐ Create separate search screen?
+☐ Searching @started(25-06-20 10:44)
+    ☐ Filter by importance levels
+    ☐ Filter by name
+    ☐ Filter by content
 ☐ Tagging/Badges
     ☐ Allow to create tags
 ☐ Change user interface documentation (move to calendar....)
 ✔ Status of mission @started(25-06-17 15:50) @done(25-06-18 16:17) @lasted(1d27m35s)
 ✔ Expanding extra information for missions @started(25-06-19 14:09) @done(25-06-19 17:03) @lasted(2h54m27s)
-☐ Shared missions, sync across different clients @started(25-06-19 18:18)
-    ☐ Workspaces
-        ☐ Add feature to choose which file you are working on
+✔ Shared missions, sync across different clients @started(25-06-19 18:18) @done(25-06-20 10:43) @lasted(16h25m59s)
+    ✔ Workspaces @done(25-06-20 10:43)
+        ✔ Add feature to choose which file you are working on @started(25-06-19 19:35) @done(25-06-20 10:43) @lasted(15h8m58s)
+        ✔ View windows at bottom of screen @done(25-06-20 10:44)
     ✔ Implement lock mechanism that will work locally and on NFS @started(25-06-19 18:27) @done(25-06-19 19:30) @lasted(1h3m28s)
 ✔ Archive missions (create new archive view) @started(25-06-19 09:37) @done(25-06-19 14:08) @lasted(4h31m26s)
     ✔ Create archive screen @done(25-06-19 11:12)

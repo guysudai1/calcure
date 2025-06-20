@@ -22,7 +22,9 @@ class JournalScreenView(View):
             return
 
         # Display header and footer:
-        header_view = HeaderView(self.stdscr, 0, 0, global_config.JOURNAL_HEADER, self.screen)
+        journal_header = global_config.JOURNAL_HEADER
+        journal_title = f"{journal_header} - {self.user_tasks._shelve_filename}"
+        header_view = HeaderView(self.stdscr, 0, 0, journal_title, self.screen)
         header_view.render()
 
         # Display the tasks:

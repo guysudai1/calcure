@@ -27,7 +27,7 @@ class Color(Enum):
     EMPTY = auto()
     CALENDAR_BORDER = auto()
     DEADLINES = auto()
-    
+
     """
     Task colors
     """
@@ -36,6 +36,11 @@ class Color(Enum):
     CURRENT_MISSION = auto()
     WAITING = auto()
     IMPORTANCE = auto()
+
+    """
+    Workspace colors
+    """
+    WORKSPACE = auto()
 
 def initialize_colors(global_config: Config):
     """Define all the color pairs"""
@@ -65,3 +70,9 @@ def initialize_colors(global_config: Config):
     curses.init_pair(Color.DONE.value, global_config.COLOR_DONE, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.IMPORTANCE.value, global_config.COLOR_IMPORTANCE, global_config.COLOR_BACKGROUND)
     curses.init_pair(Color.TITLE.value, global_config.COLOR_TITLE, global_config.COLOR_BACKGROUND)
+
+    """
+    Workspace Colors
+    """
+    curses.init_pair(Color.WORKSPACE.value, global_config.COLOR_WORKSPACE, global_config.COLOR_BACKGROUND)
+

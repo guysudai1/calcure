@@ -14,7 +14,7 @@ from calcure.consts import Importance, Status
 import prompt_toolkit
 
 from calcure.screen import Screen
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import Completer, Completion, PathCompleter
 from prompt_toolkit.formatted_text import FormattedText
 
 
@@ -59,6 +59,10 @@ def input_string(stdscr: curses.window, question, default="", placeholder: str|N
     stdscr.keypad(True)  # This is used for us to be able to use KEY_* again
     return answer
 
+def input_path(stdscr: curses.window, question, default="", placeholder: str|None=None, **kwargs):
+    """Ask user to input something and return it as a string"""
+    kwargs.pop("completer", None)  # Remove completer if we have one
+    return input_string(stdscr, question, default, placeholder, PathCompleter(expanduser=True))
 
 def input_integer(stdscr, question, is_index=True, **kwargs):
     """Ask user for an integer number and check if it is an integer"""

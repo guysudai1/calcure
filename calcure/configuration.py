@@ -167,7 +167,7 @@ class Config:
             conf.read(self.config_file, 'utf-8')
 
             # Reading default view:
-            self.DEFAULT_VIEW = AppState.JOURNAL
+            self.DEFAULT_VIEW = AppState.WIZARD
             
             # Calendar settings:
             self.SHOW_KEYBINDINGS          = conf.getboolean("Parameters", "show_keybindings", fallback=True)
@@ -224,7 +224,9 @@ class Config:
             self.COLOR_DONE           = int(conf.get("Colors", "color_done", fallback=40))
             self.COLOR_IMPORTANCE           = int(conf.get("Colors", "color_importance", fallback=231))
             
-            self.COLOR_TITLE          = int(conf.get("Colors", "color_title", fallback=CursesColor.RED.value)) # TODO: Pick color
+            self.COLOR_WORKSPACE          = int(conf.get("Colors", "color_workspace", fallback=CursesColor.MAGENTA.value))
+
+            self.COLOR_TITLE          = int(conf.get("Colors", "color_title", fallback=CursesColor.RED.value))
 
             # Font styles:
             self.BOLD_TITLE               = conf.getboolean("Styles", "bold_title", fallback=False)
@@ -249,6 +251,8 @@ class Config:
             self.data_folder = Path(self.data_folder).expanduser()
             self.TASKS_FILE = self.data_folder / "tasks"
             self.TASKS_FILE_LOCK = self.data_folder / "tasks.lock"
+            self.WORKSPACES_FILE = self.data_folder / "workspaces"
+            self.WORKSPACES_LOCK_FILE = self.data_folder / "workspaces.lock"
 
         except Exception:
             ERR_FILE1 = "Looks like there is a problem in your config.ini file. Perhaps you edited it and entered a wrong line. "

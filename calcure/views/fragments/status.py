@@ -1,8 +1,11 @@
+from typing import List
 from calcure.base_view import View
+from calcure.classes.workspace import Workspace
 from calcure.colors import Color
+from calcure.data import Workspaces
 from calcure.singletons import global_config
 
-class StatusView(View):
+class TaskStatusView(View):
     """Display the status bar of the journal"""
 
     SEPERATOR_SIZE = 2
@@ -37,3 +40,18 @@ class StatusView(View):
         done_status = f"Done" 
         done_indent = waiting_indent + len(waiting_status) + self.SEPERATOR_SIZE
         self.display_line(self.y - 1,done_indent, color=Color.DONE, bold=True, text=done_status)
+
+
+class WorkspaceStatusView(View):
+    """Display the status bar of the workspace manager"""
+
+    def __init__(self, stdscr, y, x, screen, workspaces: Workspaces):
+        super().__init__(stdscr, y, x)
+        self.screen = screen
+        self._workspace_list = workspaces
+
+    def render(self):
+        """Render this view on the screen"""
+        title_message = f"# Workspaces: {len(self._workspace_list.workspaces)}"
+        self.display_line(self.y, self.x, color=Color.TITLE, bold=True, text=title_message)
+        

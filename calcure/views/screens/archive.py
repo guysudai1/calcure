@@ -23,7 +23,10 @@ class ArchiveScreenView(View):
             return
 
         # Display header and footer:
-        header_view = HeaderView(self.stdscr, 0, 0, global_config.ARCHIVE_HEADER, self.screen)
+        archive_header = global_config.ARCHIVE_HEADER
+        archive_title = f"{archive_header} - {self.user_tasks._shelve_filename}"
+
+        header_view = HeaderView(self.stdscr, 0, 0, archive_title, self.screen)
         header_view.render()
 
         # Display the tasks:

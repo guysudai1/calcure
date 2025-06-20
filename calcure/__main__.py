@@ -28,6 +28,7 @@ from calcure.views.screens.archive import ArchiveScreenView
 from calcure.views.screens.help import HelpScreenView
 from calcure.views.screens.journal import JournalScreenView
 from calcure.views.screens.welcome import WelcomeScreenView
+from calcure.views.screens.wizard import WorkspaceManagerScreenView
 
 
 def main(stdscr) -> None:
@@ -42,25 +43,24 @@ def main(stdscr) -> None:
 
     initialize_colors(global_config)
 
-    user_tasks = Tasks(global_config.TASKS_FILE)
+    user_tasks: Tasks|None = None
+    workspaces = Workspaces(global_config.WORKSPACES_FILE)
 
     # Initialise screen views:
     app_view = View(stdscr, 0, 0)
-    journal_screen_view = JournalScreenView(stdscr, 0, 0, user_tasks, screen)
+    journal_screen_view: JournalScreenView|None = None
     help_screen_view = HelpScreenView(stdscr, 0, 0, screen)
     welcome_screen_view = WelcomeScreenView(stdscr, 0, 0, screen)
     footer_view = FooterView(stdscr, 0, 0, screen)
     separator_view = SeparatorView(stdscr, 0, 0, screen)
     error_view = ErrorView(stdscr, 0, 0, screen)
-    archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
+    archive_view: ArchiveScreenView|None = None
+    workspaces_view = WorkspaceManagerScreenView(stdscr, 0, 0, screen, workspaces)
 
     try:
         # Show welcome screen on the first run:
         if global_config.is_first_run:
             screen.state = AppState.WELCOME
-        while screen.state == AppState.WELCOME:
-            welcome_screen_view.render()
-            control_welcome_screen(stdscr, screen)
 
         # Running different screens depending on the state:
         while screen.state != AppState.EXIT:
@@ -69,33 +69,73 @@ def main(stdscr) -> None:
 
             # Calculate screen refresh rate:
             curses.halfdelay(200)
-            if user_tasks.has_active_timer and screen.state == AppState.JOURNAL:
+            if user_tasks is not None and user_tasks.has_active_timer and screen.state == AppState.JOURNAL:
                 curses.halfdelay(global_config.REFRESH_INTERVAL * 10)
 
             # Journal screen:
             if screen.state == AppState.JOURNAL:
                 if screen.split:
                     separator_view.render()
-                journal_screen_view.render()
+                
+                if journal_screen_view is not None:
+                    journal_screen_view.render()
+                else:
+                    logging.error("Must load a workspace before going to archive. Going back to workspace manager...")
+                    screen.state = AppState.WIZARD
+
                 footer_view.render()
                 error_view.render()
-                control_journal_screen(stdscr, screen, user_tasks)
+
+                if user_tasks is not None and screen.state == AppState.JOURNAL:
+                    control_journal_screen(stdscr, screen, user_tasks)
+                else:
+                    # let the error be seen
+                    stdscr.refresh()
+                    time.sleep(0.5)
 
             # Help screen:
             elif screen.state == AppState.HELP:
                 help_screen_view.render()
+                footer_view.render()
                 control_help_screen(stdscr, screen)
-            
+            elif screen.state == AppState.WELCOME:
+                welcome_screen_view.render()
+                footer_view.render()
+                control_welcome_screen(stdscr, screen)
             elif screen.state == AppState.ARCHIVE:
-                archive_view.render()
+                if archive_view is not None:
+                    archive_view.render()
+                else:
+                    logging.error("Must load a workspace before going to archive. Going back to workspace manager...")
+                    screen.state = AppState.WIZARD
+                
+                footer_view.render()
                 error_view.render()
-                control_archive_screen(stdscr, screen, user_tasks)
-
+                if user_tasks is not None and screen.state == AppState.ARCHIVE:
+                    control_archive_screen(stdscr, screen, user_tasks)
+                else:
+                    # let the error be seen
+                    stdscr.refresh()
+                    time.sleep(0.5)
+                    
+            elif screen.state == AppState.WIZARD:
+                workspaces_view.render()
+                footer_view.render()
+                error_view.render()
+                user_tasks = control_workspaces_screen(stdscr, screen, workspaces)
+                if user_tasks is not None:
+                    journal_screen_view = JournalScreenView(stdscr, 0, 0, user_tasks, screen)
+                    archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
             else:
                 break
     finally:
-        # Save shelve file
-        user_tasks.cleanup()
+        if user_tasks is not None:
+            # Save shelve file
+            user_tasks.cleanup()
+
+        if workspaces is not None:
+            # Save shelve file
+            workspaces.cleanup()
 
         # Cleaning up before quitting:
         curses.echo()
