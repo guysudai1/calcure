@@ -95,6 +95,18 @@ class Config:
                 conf.add_section(setting.section)
             conf.set(setting.section, setting.option, str(setting.default))
 
+        fun_default_icons = {
+            "docs": "🗎",
+            "talk": "👄",
+            "go": "👣",
+            "poop": "💩",
+            "think": "💭",
+            "research": "🔍"
+        }
+        conf.add_section("Event icons")
+        for icon_name, icon in fun_default_icons.items():
+            conf.set("Event icons", icon_name, icon)
+
         with open(self.config_file, 'w', encoding="utf-8") as f:
             conf.write(f)
 
