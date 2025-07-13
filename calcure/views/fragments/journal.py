@@ -22,8 +22,8 @@ class JournalView(View):
         """Render the list of tasks"""
         all_tasks = self.user_tasks.viewed_ordered_tasks
 
-        if not all_tasks and global_config.SHOW_NOTHING_PLANNED:
-            self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.UNIMPORTANT)
+        if not all_tasks and global_config.SHOW_NOTHING_PLANNED.value:
+            self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.TITLE)
         
         relevant_task_list = all_tasks[self.screen.offset:]
 

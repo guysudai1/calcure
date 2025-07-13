@@ -29,10 +29,10 @@ class WelcomeScreenView(View):
         d_y = self.y_max//2 - 5
 
         self.display_line(d_y, d_x - len(MSG_WELCOME_1+VERSION+" ")//2, f"{MSG_WELCOME_1} {VERSION}", Color.ACTIVE_PANE)
-        self.display_line(d_y + 1, d_x - len(MSG_WELCOME_2)//2, MSG_WELCOME_2, Color.TODO)
-        self.display_line(d_y + 3, d_x - len(MSG_WELCOME_3)//2, MSG_WELCOME_3, Color.TODO)
+        self.display_line(d_y + 1, d_x - len(MSG_WELCOME_2)//2, MSG_WELCOME_2, Color.HINTS)
+        self.display_line(d_y + 3, d_x - len(MSG_WELCOME_3)//2, MSG_WELCOME_3, Color.HINTS)
         self.display_line(d_y + 4, d_x - len(str(global_config.config_folder))//2, str(global_config.config_folder), Color.TITLE)
-        self.display_line(d_y + 6, d_x - len(MSG_WELCOME_4)//2, MSG_WELCOME_4, Color.TODO)
+        self.display_line(d_y + 6, d_x - len(MSG_WELCOME_4)//2, MSG_WELCOME_4, Color.HINTS)
         self.display_line(d_y + 7, d_x - len(MSG_SITE)//2, MSG_SITE, Color.TITLE)
-        self.display_line(d_y + 9, d_x - len(MSG_WELCOME_5)//2, MSG_WELCOME_5, Color.TODO)
+        self.display_line(d_y + 9, d_x - len(MSG_WELCOME_5)//2, MSG_WELCOME_5, Color.HINTS)
         

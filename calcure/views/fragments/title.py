@@ -12,4 +12,4 @@ class TitleView(View):
 
     def render(self):
         """Render this view on the screen"""
-        self.display_line(0, self.screen.x_min, self.title, Color.HEADER, global_config.BOLD_TITLE, global_config.UNDERLINED_TITLE)
+        self.display_line(0, self.screen.x_min, self.title, Color.HEADER, global_config.BOLD_TITLE.value, global_config.UNDERLINED_TITLE.value)

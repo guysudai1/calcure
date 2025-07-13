@@ -24,5 +24,5 @@ class HeaderView(View):
         # Show time:
         time_string = time.strftime("%H:%M:%S", time.localtime())
         size_allows = len(time_string) < self.screen.x_max - len(self.title)
-        if global_config.SHOW_CURRENT_TIME and size_allows:
+        if global_config.SHOW_CURRENT_TIME.value and size_allows:
             self.display_line(0, (self.screen.x_max // 2 - len(time_string) // 2), time_string, Color.TIME)

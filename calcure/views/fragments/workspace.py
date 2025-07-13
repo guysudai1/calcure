@@ -20,7 +20,7 @@ class WorkspaceView(View):
     def render(self):
         """Render a line with an icon, task, deadline, and timer"""
         icon_indent = self.x + 4
-        self.display_line(self.y, icon_indent, global_config.TODO_ICON, Color.PROMPTS)
+        self.display_line(self.y, icon_indent, global_config.TODO_ICON.value, Color.PROMPTS)
 
         self.display_line(self.y, icon_indent, self.workspace.workspace_path, Color.WORKSPACE)
 
@@ -36,7 +36,7 @@ class WorkspaceManagerView(View):
         """Render a line with an icon, task, deadline, and timer"""
 
         if not self.workspaces.workspaces:
-            self.display_line(self.y, self.x, MSG_TS_NO_WORKSPACES, Color.UNIMPORTANT)
+            self.display_line(self.y, self.x, MSG_TS_NO_WORKSPACES, Color.TITLE)
             self.y += 1
         
         for index, workspace in enumerate(self.workspaces.workspaces):

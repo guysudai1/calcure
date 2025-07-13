@@ -131,8 +131,9 @@ MSG_INPUT         = "Incorrect input."
 MSG_GOTO          = "Go to date (YYYY/MM/DD): "
 MSG_GOTO_D        = "Go to date: "
 
-JOURNAL_HINT      = "Space · Switch to archive   a · Add task   A · Add subtask   d · Done   s · Status   i · Importance   / · Filter  ? · All keybindings"
+JOURNAL_HINT      = "Space · Switch to archive   a · Add   d · Done   s · Status   i · Importance   / · Filter  ? · All keybindings"
 ARCHIVE_HINT      = "Space · Switch to journal   x · Restore   o · Extra Info   / · Filter  ? · All keybindings"
+WORKSPACE_HINT      = "a · Add   l · Load   x · Delete  ? · All keybindings"
 
 DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 DAYS_PERSIAN = ["SHANBEH", "YEKSHANBEH", "DOSHANBEH", "SESHANBEH", "CHAHARSHANBEH", "PANJSHANBEH", "JOMEH"]

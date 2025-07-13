@@ -11,7 +11,7 @@ class Screen:
     """Main state of the program that describes what is displayed and how"""
     def __init__(self, stdscr, global_config: Config):
         self.stdscr = stdscr
-        self._state = global_config.DEFAULT_VIEW
+        self._state = AppState(global_config.DEFAULT_VIEW.value)
         self.currently_drawn = self.state
         self.selection_mode = False
         self.refresh_now = True

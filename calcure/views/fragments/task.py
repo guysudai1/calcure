@@ -43,7 +43,10 @@ class TaskView(View):
     @property
     def icon(self):
         """Select the icon for the task"""
-        icon = global_config.TODO_ICON
+        icon = global_config.TODO_ICON.value
+
+        if self.task.status == Status.DONE:
+            icon = global_config.DONE_ICON.value
 
         if self.task.collapse:
             icon = "+"
@@ -55,15 +58,14 @@ class TaskView(View):
         """Icon and name of the task, which is decorated if needed"""
         name = self.task.name
         if self.task.privacy:
-            return f'{global_config.PRIVACY_ICON * len(name)}'
+            return f'{global_config.PRIVACY_ICON.value * len(name)}'
 
-        if global_config.DISPLAY_ICONS:
-            for keyword in global_config.CUSTOM_ICONS:
-                icon = global_config.CUSTOM_ICONS[keyword]
-                keyword = f"@{keyword}"
-                name = name.replace(keyword, icon)
+        for keyword in global_config.custom_icons:
+            icon = global_config.custom_icons[keyword]
+            keyword = f"@{keyword}"
+            name = name.replace(keyword, icon)
 
-        if self.task.status == Status.DONE and global_config.STRIKETHROUGH_DONE:
+        if self.task.status == Status.DONE and global_config.STRIKETHROUGH_DONE.value:
             strike = "\u0336"
             info_str = f'{strike}{strike.join(name)}{strike}'
         else:
@@ -79,10 +81,10 @@ class TaskView(View):
             info_str += f" [belongs to ghost: '{parent_short_name}']"
 
         if self.task.extra_info.strip():
-            info_str += f" {global_config.EXTRA_INFO_ICON}"
+            info_str += f" {global_config.EXTRA_INFO_ICON.value}"
 
         if self.task.collapse:
-            info_str += f" {global_config.COLLAPSED_ICON}"
+            info_str += f" {global_config.COLLAPSED_ICON.value}"
 
         return info_str
 

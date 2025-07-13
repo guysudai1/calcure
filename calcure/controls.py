@@ -29,7 +29,7 @@ def safe_run(func):
 
         # Handle keyboard interruption with ctrl+c:
         except KeyboardInterrupt:
-            confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
+            confirmed = ask_confirmation(stdscr, MSG_EXIT)
             screen.state = AppState.EXIT if confirmed else screen.state
 
         # Prevent crash if no input:
@@ -55,7 +55,7 @@ def handle_screen_transfer_keys(stdscr, screen: Screen, key: str|None):
         return False
 
     if key == "q":
-        confirmed = ask_confirmation(stdscr, MSG_EXIT, global_config.ASK_CONFIRMATION_TO_QUIT)
+        confirmed = ask_confirmation(stdscr, MSG_EXIT)
         if confirmed:
             screen.state = AppState.EXIT
             return True
@@ -173,21 +173,21 @@ def control_journal_screen(stdscr: curses.window, screen: Screen, user_tasks: Ta
         # Modify the task:
         if screen.key in ['x']:
             msg = MSG_TS_DEL
-            if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+            if global_config.ADD_TO_ARCHIVE_ON_DELETE.value:
                 msg = MSG_TS_ARCHIVE
             number = input_integer(stdscr, msg)
             if number is not None and user_tasks.is_valid_number(number):
                 task: Task = user_tasks.viewed_ordered_tasks[number]
                 if task.children:
                     msg = MSG_TS_CHILDREN_DEL
-                    if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                    if global_config.ADD_TO_ARCHIVE_ON_DELETE.value:
                         msg = MSG_TS_CHILDREN_ARCHIVE
 
                     delete_children_as_well = ask_confirmation(stdscr, msg, True)
                 else:
                     delete_children_as_well = False
                 
-                if global_config.ADD_TO_ARCHIVE_ON_DELETE:
+                if global_config.ADD_TO_ARCHIVE_ON_DELETE.value:
                     user_tasks.archive_task(task.item_id, delete_children_as_well)
                 else:
                     user_tasks.delete_task(task.item_id, delete_children_as_well)

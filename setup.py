@@ -23,7 +23,7 @@ setuptools.setup(
             "calcure = calcure.__main__:cli"
         ]
     },
-    install_requires=[],
+    install_requires=["prompt_toolkit", "flufl.lock"],
     version=version,
     python_requires='~=3.10',
     classifiers=[

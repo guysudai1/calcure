@@ -4,4 +4,4 @@ from calcure.errors import Error
 
 
 global_config = Config()
-error = Error(global_config.LOG_FILE)
+error = Error(global_config.LOG_FILE.value)

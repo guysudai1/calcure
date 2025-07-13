@@ -34,8 +34,8 @@ class Shelveable:
         """
         File locking
         """
-        lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT) # Maximum timeout to wait for lock
-        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME)  # Maximum time to write the file will be 10 minutes
+        lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT.value) # Maximum timeout to wait for lock
+        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME.value)  # Maximum time to write the file will be 10 minutes
         self.tasks_lock = Lock(str(lock_filename), lifetime=lock_lifetime, default_timeout=lock_acquire_timeout)
 
         """
@@ -91,7 +91,7 @@ class Shelveable:
             self.changed = False
         
         time_passed = time.time() - self._last_save_time
-        if time_passed >= global_config.JOURNAL_SAVE_INTERVAL:
+        if time_passed >= global_config.JOURNAL_SAVE_INTERVAL.value:
             self._save_changes_and_reopen_shelve()
             self._last_save_time = time.time()
             self.changed = False

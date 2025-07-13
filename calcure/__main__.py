@@ -43,7 +43,7 @@ def main(stdscr) -> None:
     initialize_colors(global_config)
 
     user_tasks: Tasks|None = None
-    workspaces = Workspaces(global_config.WORKSPACES_FILE, global_config.WORKSPACES_LOCK_FILE)
+    workspaces = Workspaces(global_config.WORKSPACES_FILE.value, global_config.WORKSPACES_LOCK_FILE.value)
 
     # Initialise screen views:
     app_view = View(stdscr, 0, 0)
@@ -68,7 +68,7 @@ def main(stdscr) -> None:
             # Calculate screen refresh rate:
             curses.halfdelay(200)
             if user_tasks is not None and user_tasks.has_active_timer and screen.state == AppState.JOURNAL:
-                curses.halfdelay(global_config.REFRESH_INTERVAL * 10)
+                curses.halfdelay(global_config.REFRESH_INTERVAL.value * 10)
 
             # Journal screen:
             if screen.state == AppState.JOURNAL:
@@ -124,6 +124,8 @@ def main(stdscr) -> None:
                     archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
             else:
                 break
+    except Exception as e:
+        pass
     finally:
         if user_tasks is not None:
             # Save shelve file
