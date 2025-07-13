@@ -25,9 +25,9 @@ class ErrorView(View):
             # Depending on error type, display different messages:
             if self.error.number_of_errors >= 1:
                 if self.error.number_of_errors == 1:
-                    self.display_line(self.screen.y_max - 2, 0, self.error.text, Color.IMPORTANT)
+                    self.display_line(self.screen.y_max - 2, 0, self.error.text, Color.ERROR)
                 else:
-                    self.display_line(self.screen.y_max - 2, 0, MSG_ERRORS, Color.IMPORTANT)
+                    self.display_line(self.screen.y_max - 2, 0, MSG_ERRORS, Color.ERROR)
             else:
                 self.display_line(self.screen.y_max - 2, 0, self.error.text, Color.HINTS)
 
