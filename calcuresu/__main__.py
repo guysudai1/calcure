@@ -126,7 +126,12 @@ def main(stdscr) -> None:
             else:
                 break
     except Exception as e:
-        pass
+        raise
+    else:
+        # Cleaning up before quitting:
+        curses.echo()
+        curses.curs_set(True)
+        curses.endwin()
     finally:
         if user_tasks is not None:
             # Save shelve file
@@ -136,10 +141,6 @@ def main(stdscr) -> None:
             # Save shelve file
             workspaces.cleanup()
 
-        # Cleaning up before quitting:
-        curses.echo()
-        curses.curs_set(True)
-        curses.endwin()
 
 
 def cli() -> None:

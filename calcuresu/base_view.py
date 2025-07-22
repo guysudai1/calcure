@@ -1,4 +1,5 @@
 import curses
+import logging
 
 from calcuresu.colors import Color
 
@@ -44,4 +45,5 @@ class View:
                 color = color.value if hasattr(color, "value") else color
                 self.stdscr.addstr(y, x, text, curses.color_pair(color))
         except curses.error: # Fix for occasional error with large zoom (reason is unclear)
+            logging.error("Curses error occured!")
             return

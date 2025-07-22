@@ -32,9 +32,6 @@ def safe_run(func):
             confirmed = ask_confirmation(stdscr, MSG_EXIT)
             screen.state = AppState.EXIT if confirmed else screen.state
 
-        # Prevent crash if no input:
-        except curses.error:
-            pass
     return inner
 
 

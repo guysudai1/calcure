@@ -31,10 +31,6 @@ def safe_run(func):
         # Handle keyboard interruption with ctrl+c:
         except KeyboardInterrupt:
             pass
-
-        # Prevent crash if no input:
-        except curses.error:
-            pass
     return inner
 
 
@@ -114,6 +110,7 @@ def input_filter_field(stdscr, question, **kwargs):
     try:
         filter_chosen = Filters(number)
     except ValueError:
+        logging.error("Invalid filter chosen")
         return None
     
     return filter_chosen
