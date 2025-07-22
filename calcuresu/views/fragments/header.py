@@ -1,0 +1,28 @@
+import time
+from calcuresu.base_view import View
+from calcuresu.colors import Color
+from calcuresu.configuration import AppState
+from calcuresu.views.fragments.title import TitleView
+from calcuresu.singletons import global_config
+
+class HeaderView(View):
+    """Show the header that includes the time, and title"""
+
+    def __init__(self, stdscr, y, x, title, screen):
+        super().__init__(stdscr, y, x)
+        self.title = title
+        self.screen = screen
+
+    def render(self):
+        """Render this view on the screen"""
+        _, x_max = self.stdscr.getmaxyx()
+
+        # Show title:
+        title_view = TitleView(self.stdscr, 0, self.screen.x_min, self.title, self.screen)
+        title_view.render()
+
+        # Show time:
+        time_string = time.strftime("%H:%M:%S", time.localtime())
+        size_allows = len(time_string) < self.screen.x_max - len(self.title)
+        if global_config.SHOW_CURRENT_TIME.value and size_allows:
+            self.display_line(0, (self.screen.x_max // 2 - len(time_string) // 2), time_string, Color.TIME)

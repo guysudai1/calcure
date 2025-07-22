@@ -4,23 +4,23 @@ import setuptools
 
 setup_dir = Path(__file__).resolve().parent
 
-version = re.search( r'VERSION = "(.*)"', Path(setup_dir, 'calcure/consts.py').open().read())
+version = re.search( r'VERSION = "(.*)"', Path(setup_dir, 'calcuresu/consts.py').open().read())
 if version is None:
     raise SystemExit("Could not determine version to use")
 version = version.group(1)
 
 setuptools.setup(
-    name='calcure',
+    name='calcuresu',
     author='Guy Sudai',
     author_email='sudaiguy1@gmail.com',
-    url='https://github.com/guysudai1/calcure',
+    url='https://github.com/guysudai1/calcuresu',
     description='Modern TUI task manager (re-written by guysu)',
     long_description=Path(setup_dir, 'README.md').open().read(),
     long_description_content_type='text/markdown',
     license='MIT',
     entry_points={
         "console_scripts": [
-            "calcure = calcure.__main__:cli"
+            "calcuresu = calcuresu.__main__:cli"
         ]
     },
     install_requires=["prompt_toolkit", "flufl.lock"],
@@ -38,11 +38,11 @@ setuptools.setup(
         "Programming Language :: Python :: 3.13",
         "Topic :: Utilities",
     ],
-    packages=["calcure", "calcure.translations", "calcure.views", "calcure.views.screens", "calcure.views.fragments", "calcure.classes"],
+    packages=["calcuresu", "calcuresu.translations", "calcuresu.views", "calcuresu.views.screens", "calcuresu.views.fragments", "calcuresu.classes"],
     include_package_data=True,
     data_files=[
         ('share/man/man1',
-         ['calcure.1.gz']
+         ['calcuresu.1.gz']
          ),
     ],
 )

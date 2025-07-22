@@ -35,7 +35,7 @@ Modern TUI task manager with customizable interface. Manages your tasks
 python3 setup.py install
 
 # Now you can run:
-python3 -m calcure
+python3 -m calcuresu
 ```
 ### Dependencies
 
@@ -45,7 +45,7 @@ python3 -m calcure
 
 ## Usage
 
-Run `calcure` in your terminal. You may need to restart your terminal after the install.
+Run `calcuresu` in your terminal. You may need to restart your terminal after the install.
 
 ### Key bindings
 
@@ -53,4 +53,4 @@ Can view the bindings using the `?` key in the program.
 
 ### Settings
 
-On the first run, calcure will create a `config.ini` file where you can edit parameters, colors, and icons at `~/.config/calcure/config.ini`
+On the first run, calcuresu will create a `config.ini` file where you can edit parameters, colors, and icons at `~/.config/calcuresu/config.ini`

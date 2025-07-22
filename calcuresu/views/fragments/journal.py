@@ -1,0 +1,50 @@
+from calcuresu.base_view import View
+
+from calcuresu.colors import Color
+from calcuresu.configuration import AppState
+from calcuresu.data import Tasks
+from calcuresu.screen import Screen
+from calcuresu.singletons import global_config
+from calcuresu.translations.en import MSG_TS_NOTHING
+from calcuresu.views.fragments.filter import FilterView
+from calcuresu.views.fragments.status import TaskStatusView
+from calcuresu.views.fragments.task import TaskView
+
+class JournalView(View):
+    """Displays a list of all tasks"""
+
+    def __init__(self, stdscr, y, x, user_tasks: Tasks, screen):
+        super().__init__(stdscr, y, x)
+        self.user_tasks = user_tasks
+        self.screen: Screen = screen
+
+    def render(self):
+        """Render the list of tasks"""
+        all_tasks = self.user_tasks.viewed_ordered_tasks
+
+        if not all_tasks and global_config.SHOW_NOTHING_PLANNED.value:
+            self.display_line(self.y, self.x, MSG_TS_NOTHING, Color.TITLE)
+        
+        relevant_task_list = all_tasks[self.screen.offset:]
+
+        status_view = TaskStatusView(self.stdscr, self.y, self.x, self.screen, relevant_task_list, all_tasks)
+        status_view.render()
+        self.y += 1
+        
+        if self.user_tasks.has_filter:
+            assert self.user_tasks.filter is not None, "Shouldnt reach this"
+            filter_view = FilterView(self.stdscr, self.y, self.x, self.user_tasks.filter)
+            filter_view.render()
+            self.y += 1
+
+        for index, task in enumerate(relevant_task_list, start=self.screen.offset):
+            if self.y + 1 >= self.screen.y_max:
+                break
+            task_view = TaskView(self.stdscr, self.y, self.x, task, self.screen, indent=self.user_tasks.get_indent_count(task),
+                                 parent=self.user_tasks.get_task_by_id(task.parent_id))
+            task_view.render()
+            if self.screen.selection_mode and self.screen.state == AppState.JOURNAL:
+                self.display_line(self.y, self.x, str(index + 1), Color.ACTIVE_PANE)
+            self.y += 1
+
+        self.y += 1

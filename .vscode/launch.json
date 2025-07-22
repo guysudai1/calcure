@@ -8,13 +8,13 @@
             "name": "Python Debugger: Module",
             "type": "debugpy",
             "request": "launch",
-            "module": "calcure"
+            "module": "calcuresu"
         },
         {
             "name": "Python Debugger: Module",
             "type": "debugpy",
             "request": "launch",
-            "module": "calcure"
+            "module": "calcuresu"
         }
     ]
 }
