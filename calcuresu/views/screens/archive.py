@@ -16,8 +16,9 @@ class ArchiveScreenView(View):
 
     def render(self):
         """Journal view showing all tasks"""
-        self.user_tasks.save_if_needed()
-        self.user_tasks._reopen_shelve()  # Reload for NFS sync support
+
+        if not self.screen.need_refresh:
+            return
 
         self.screen.currently_drawn = AppState.ARCHIVE
         if self.screen.x_max < 6 or self.screen.y_max < 3:

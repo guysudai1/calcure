@@ -22,6 +22,8 @@ class Screen:
         self.month = self.today.month
         self.year = self.today.year
         self.offset = 0
+        self.need_refresh = True
+        self.next_need_refresh = True
         
 
     @property

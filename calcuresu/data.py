@@ -1,10 +1,14 @@
 """Module provides datatypes used in the program"""
 
 from abc import abstractmethod
+from contextlib import contextmanager
 from curses import window
+import curses
 from datetime import date, datetime, timedelta
 import dbm
+import dbm.sqlite3
 import logging
+import os
 from pathlib import Path
 import re
 import shelve
@@ -13,13 +17,14 @@ import enum
 from typing import Any, List
 
 import prompt_toolkit
-from flufl.lock import AlreadyLockedError, Lock
+from flufl.lock import AlreadyLockedError, Lock, LockState, TimeOutError
 
 from calcuresu.classes.task import RootTask, Task, TaskFilter
 from calcuresu.classes.timer import Timer
 from calcuresu.classes.workspace import Workspace
 from calcuresu.consts import Filters, Importance, Status
-from calcuresu.dialogues import move_cursor_to_x_y
+from calcuresu.dialogues import ask_confirmation, move_cursor_to_x_y
+from calcuresu.screen import Screen
 from calcuresu.singletons import error, global_config
 
 
@@ -29,29 +34,37 @@ class Shelveable:
         Shelf file constants
         """
         self._shelve_filename = shelve_filename
-        self._shelve_file: shelve.Shelf | None = self._initialize_shelve()
+        self._shelve_file: shelve.Shelf | None = None
 
         """
         File locking
         """
         lock_acquire_timeout = timedelta(seconds=global_config.LOCK_ACQUIRE_TIMEOUT.value) # Maximum timeout to wait for lock
-        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME.value)  # Maximum time to write the file will be 10 minutes
+        lock_lifetime = timedelta(seconds=global_config.LOCK_LIFETIME.value)  # Maximum time to write the file
         self.tasks_lock = Lock(str(lock_filename), lifetime=lock_lifetime, default_timeout=lock_acquire_timeout)
 
         """
         Shelf file saving variables
         """
-        self._last_save_time = None
         self.changed = False
+
+        """ Last file modification time """
+        self.last_shelve_modification_time = None 
+
+    def initialize(self, stdscr: curses.window, screen: Screen):
+        shelve = self.reopen_shelve_locked(stdscr, screen)
+        
+        self.last_shelve_modification_time = self._get_shelve_last_modification_time()
+        return shelve
 
     def _initialize_shelve(self):
         try:
             shelf: shelve.Shelf = shelve.open(self._shelve_filename, writeback=True, protocol=4)
         except dbm.error as e:
             display_error = ""
-            if hasattr(e, "strerror") and isinstance(e.strerror, str):
+            if hasattr(e, "strerror") and isinstance(e.strerror, str): # noqa
                 display_error += e.strerror + ": "
-            if hasattr(e, "filename") and isinstance(e.filename, str):
+            if hasattr(e, "filename") and isinstance(e.filename, str): #
                 display_error += e.filename + " "
 
             logging.error(display_error)
@@ -60,43 +73,149 @@ class Shelveable:
         self.hook_initialize_shelf(shelf)
 
         return shelf
-    
+
+    def cleanup(self):
+        self.tasks_lock.unlock(unconditionally=True)
+
     @abstractmethod
     def hook_initialize_shelf(self, shelf: shelve.Shelf):
         raise NotImplementedError()
 
-    def _write_to_shelve_file(self):
+    def _write_to_shelve_file_nolock(self):
         assert self._shelve_file is not None
 
         logging.info("Saving file...")
-        with self.tasks_lock:
-            self._shelve_file.close()  # calls sync inside of it 
-            self._shelve_file = None # Invalidate shelve file
-        
+        self._shelve_file.close()  # calls sync inside of it 
+        self._shelve_file = None # Invalidate shelve file
         error.clear_indication = True
 
-    def _reopen_shelve(self):
+    def _write_to_shelve_file_locked(self):
+        with self.tasks_lock:
+            self._write_to_shelve_file_nolock()
+
+    def reopen_shelve_nolock(self):
         # Re-initialize shelve file
         self._shelve_file = self._initialize_shelve()
+        self.last_shelve_modification_time = self._get_shelve_last_modification_time()
 
-    def _save_changes_and_reopen_shelve(self):
-        self._write_to_shelve_file()
-        self._reopen_shelve()
+    def reopen_shelve_locked(self,stdscr: curses.window, screen: Screen):
+        with try_to_lock_auto_unlock(stdscr, screen, self) as locked:
+            if locked:
+                self.reopen_shelve_nolock()
+
+            return locked
+
+    def reopen_shelve_if_needed_locked(self,stdscr: curses.window, screen: Screen):
+        if self.has_shelve_file_changed():
+            try:
+                if self.reopen_shelve_locked(stdscr, screen):
+                    screen.next_need_refresh = True
+                    return True
+            except dbm.sqlite3.error:
+                # The other end didn't finish writing probably
+                return True
+        return False
+
+
+    def _save_changes_and_reopen_shelve_nolock(self):
+        self._write_to_shelve_file_nolock()
+        self.reopen_shelve_nolock()
+    
+    def _get_shelve_last_modification_time(self):
+        return int(os.stat(self._shelve_filename).st_mtime)
+
+    def has_shelve_file_changed(self):
+        # Note: we don't want to only trust the last modification time, due to computers having different clocks
+        current_modification_time = self._get_shelve_last_modification_time()
         
-    def save_if_needed(self):
+        if current_modification_time < self.last_shelve_modification_time:
+            raise RuntimeError("One of the computers editing this file has a different time than yours! Find them and handle it...")
+
+        return current_modification_time > self.last_shelve_modification_time
+
+    def is_other_user_editing(self):
+        # "LockState.theirs" is basically for other processes on the same computer
+        lockfile_state = self.tasks_lock.state
+        if lockfile_state in [LockState.unlocked, LockState.ours, LockState.ours_expired]:
+            return False 
+        
+        hostname, pid, _ = self.tasks_lock.details
+        lockfile_expiration = self.tasks_lock.expiration
+
+        if hostname == self.tasks_lock.hostname:
+            logging.warning(f"Another process on your pc ({pid}) has taken the lock. It expires in {lockfile_expiration}")
+            return True
+        
+        return lockfile_expiration < datetime.now() # Lock has expired and we can use it now
+        
+    @property
+    def our_lock(self):
+        return self.tasks_lock.state == LockState.ours
+
+    def force_acquire_lock(self):
+        try:
+            self.tasks_lock.lock(timeout=1)
+        except TimeOutError:
+            self.tasks_lock._break()
+            self.tasks_lock.lock()  # Use default timeout
+
+    def try_lock_default_timeout(self):
+        try:
+            self.lock(timeout=None)
+            return True
+        except TimeOutError:
+            return False 
+
+    def lock(self, timeout: int|None):
+        return self.tasks_lock.lock(timeout)
+
+    def unlock(self):
+        return self.tasks_lock.unlock(unconditionally=True)
+
+    def refresh_lock(self):
+        assert self.our_lock
+        self.tasks_lock.refresh(unconditionally=True)
+
+    def save_if_needed_nolock(self):
         if not self.changed:
             return 
-    
-        if self._last_save_time is None:
-            self._save_changes_and_reopen_shelve()
-            self._last_save_time = time.time()
-            self.changed = False
+
+        self._save_changes_and_reopen_shelve_nolock()
+        self.changed = False
+
+    def save_if_needed_locked(self):
+        if not self.changed:
+            return 
+
+        with self.tasks_lock:
+            self.save_if_needed_nolock()    
+
+
+@contextmanager
+def try_to_lock_auto_unlock(stdscr: curses.window, screen: Screen, shelvable: Shelveable):
+    locked = try_to_lock(stdscr, screen, shelvable)
         
-        time_passed = time.time() - self._last_save_time
-        if time_passed >= global_config.JOURNAL_SAVE_INTERVAL.value:
-            self._save_changes_and_reopen_shelve()
-            self._last_save_time = time.time()
-            self.changed = False
+    try:
+        yield locked
+    
+    finally:
+        if locked:
+            shelvable.unlock()
+
+def try_to_lock(stdscr: curses.window, screen: Screen, shelvable: Shelveable):
+
+    if shelvable.our_lock:
+        shelvable.refresh_lock()
+        return True 
+
+    if shelvable.try_lock_default_timeout():
+        return True
+    if ask_confirmation(stdscr, screen, "Another user is currently editing. Are you sure you want to forcefully take the lock? (their lock has a timeout)"):
+        shelvable.force_acquire_lock()
+        return True
+    
+    return False 
+
 
 class Tasks(Shelveable):
     """List of tasks created by the user"""
@@ -131,9 +250,6 @@ class Tasks(Shelveable):
     def from_workspace(cls, workspace: Workspace):
         return cls(workspace.workspace_path, workspace.workspace_lock)
 
-    def cleanup(self):
-        self._write_to_shelve_file()
-
     def restore_item_from_archive_with_children(self, task: Task, restore_children: bool):
         task.archive_date = None
 
@@ -142,6 +258,7 @@ class Tasks(Shelveable):
             for child_task in children:
                 if child_task.is_archived:
                     child_task.archive_date = None
+        self.changed = True
 
     def delete_all_items(self):
         self.task_tree.clear()
@@ -316,7 +433,7 @@ class Tasks(Shelveable):
         task.timer.stamps = []
         self.changed = True
 
-    def change_deadline(self, task: Task, deadline_date: date):
+    def change_deadline(self, task: Task, deadline_date: date|None):
         """Reset the timer for one of the tasks"""
         task.deadline = deadline_date
         self.changed = True
@@ -414,9 +531,6 @@ class Workspaces(Shelveable):
     def __init__(self, filename: Path | str, lockfile: Path | str):
         super().__init__(filename, lockfile)
         self.workspace_loaded: Workspace|None = None
-
-    def cleanup(self):
-        self._write_to_shelve_file()
 
     def is_valid_number(self, number: int):
         return 0 <= number < len(self.workspaces)

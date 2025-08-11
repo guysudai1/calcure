@@ -4,6 +4,7 @@ from calcuresu.classes.task import RootTask, Task
 from calcuresu.classes.workspace import Workspace
 from calcuresu.colors import Color
 from calcuresu.data import Status, Workspaces
+from calcuresu.screen import Screen
 from calcuresu.singletons import global_config
 from calcuresu.translations.en import MSG_TS_NO_WORKSPACES
 from calcuresu.views.fragments.deadline import TaskDeadlineView
@@ -27,7 +28,7 @@ class WorkspaceView(View):
 class WorkspaceManagerView(View):
     """Display the entire workspace list"""
 
-    def __init__(self, stdscr, y, x, workspace: Workspaces, screen):
+    def __init__(self, stdscr, y, x, workspace: Workspaces, screen: Screen):
         super().__init__(stdscr, y, x)
         self.workspaces = workspace
         self.screen = screen

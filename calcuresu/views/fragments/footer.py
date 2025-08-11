@@ -25,6 +25,10 @@ class FooterView(View):
         """Render this view on the screen"""
         if not global_config.SHOW_KEYBINDINGS.value: 
             return
+        
+        if not self.screen.need_refresh:
+            return
+
         clear_line(self.stdscr, self.screen.y_max - 1)
 
         hints = self.get_screen_state()

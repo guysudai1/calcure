@@ -42,7 +42,7 @@ def clear_line(stdscr, y, x=0):
 
 
 
-def input_string(stdscr: curses.window, question, default="", placeholder: str|None=None, autocomplete: Completer|None=None, **kwargs):
+def input_string(stdscr: curses.window, screen: Screen, question, default="", placeholder: str|None=None, autocomplete: Completer|None=None, **kwargs):
     """Ask user to input something and return it as a string"""
     move_cursor_to_input_position(stdscr)
 
@@ -54,18 +54,23 @@ def input_string(stdscr: curses.window, question, default="", placeholder: str|N
         placeholder_formatted = None 
     
     answer = prompt_toolkit.prompt(message=question, default=default, reserve_space_for_menu=amount_of_rows_prompt_toolkit_takes, placeholder=placeholder_formatted, completer=autocomplete, **kwargs)
+    screen.next_need_refresh = True
     stdscr.refresh()
     stdscr.keypad(True)  # This is used for us to be able to use KEY_* again
     return answer
 
-def input_path(stdscr: curses.window, question, default="", placeholder: str|None=None, **kwargs):
+def input_path(stdscr: curses.window, screen: Screen, question, default="", placeholder: str|None=None, **kwargs):
     """Ask user to input something and return it as a string"""
     kwargs.pop("completer", None)  # Remove completer if we have one
-    return input_string(stdscr, question, default, placeholder, PathCompleter(expanduser=True))
+    try:
+        return input_string(stdscr, screen, question, default, placeholder, PathCompleter(expanduser=True))
+    finally:
+        screen.next_need_refresh = True
 
-def input_integer(stdscr, question, is_index=True, display_error=True, **kwargs):
+def input_integer(stdscr, screen: Screen, question, is_index=True, display_error=True, **kwargs):
     """Ask user for an integer number and check if it is an integer"""
-    number = input_string(stdscr, question, **kwargs)
+    number = input_string(stdscr, screen, question, **kwargs)
+    screen.next_need_refresh = True
     try:
         number = int(number)
         if is_index:
@@ -76,7 +81,7 @@ def input_integer(stdscr, question, is_index=True, display_error=True, **kwargs)
         return None
     return number
 
-def input_filter_content(stdscr, filter_chosen: Filters):
+def input_filter_content(stdscr, screen: Screen, filter_chosen: Filters):
     match filter_chosen:
         case Filters.NAME | Filters.EXTRA_INFO:
             if filter_chosen == Filters.NAME:
@@ -85,17 +90,17 @@ def input_filter_content(stdscr, filter_chosen: Filters):
                 msg = MSG_TS_FILTER_EXTRA_INFO
             else:
                 raise Exception("Invalid filter chosen")
-            filter_content = input_string(stdscr, msg)
+            filter_content = input_string(stdscr, screen, msg)
         case Filters.STATUS:
-            filter_content = input_status(stdscr)
+            filter_content = input_status(stdscr, screen)
         case Filters.IMPORTANCE:
-            filter_content = input_importance(stdscr)
+            filter_content = input_importance(stdscr, screen)
         case _:
             raise Exception("Invalid filter chosen")
 
     return filter_content
 
-def input_filter_field(stdscr, question, **kwargs):
+def input_filter_field(stdscr, screen: Screen, question, **kwargs):
     question = []
     for filter_enum in Filters:
         question.append(f"{filter_enum.value}={filter_enum.name}")
@@ -103,7 +108,8 @@ def input_filter_field(stdscr, question, **kwargs):
 
     kwargs["bottom_toolbar"] = question_str
     display_error = kwargs.pop("display_error", True)
-    number = input_integer(stdscr, MSG_TS_FILTER, is_index=False, display_error=display_error, **kwargs)
+    number = input_integer(stdscr, screen, MSG_TS_FILTER, is_index=False, display_error=display_error, **kwargs)
+    screen.next_need_refresh = True
     if number is None:
         return None
 
@@ -115,35 +121,38 @@ def input_filter_field(stdscr, question, **kwargs):
     
     return filter_chosen
 
-def input_status(stdscr):
+def input_status(stdscr, screen: Screen):
     """Ask user for an integer representing a task status"""
     question = []
     for status_enum in Status:
         question.append(f"{status_enum.value}={status_enum.name}")
     question_str = ", ".join(question)
     question_str += " : " 
-    number = input_integer(stdscr, "New task status: ",  is_index=False, bottom_toolbar=question_str)
+    number = input_integer(stdscr, screen, "New task status: ",  is_index=False, bottom_toolbar=question_str)
+    screen.next_need_refresh = True
     try:
         return Status(number)
     except ValueError:
         logging.error("Invalid status number entered")
         return None
 
-def input_importance(stdscr):
+def input_importance(stdscr, screen: Screen):
     """Ask user for an integer representing task importance"""
     bottom_toolbar = "Optional - can be deferred, Low - nice to have, Medium - far future, High - near future, Critical - ASAP" 
 
     question_str = "Undecided (0), Optional (1-2), Low (3-4), Medium (5-6), High (7-8), Critical (9-10): " 
-    number = input_integer(stdscr, question_str, is_index=False, bottom_toolbar=bottom_toolbar)
+    number = input_integer(stdscr, screen, question_str, is_index=False, bottom_toolbar=bottom_toolbar)
+    screen.next_need_refresh = True
     try:
         return Importance(number)
     except ValueError:
         logging.error("Invalid importance number entered")
         return None
 
-def input_date(stdscr, prompt_string):
+def input_date(stdscr, screen: Screen, prompt_string):
     """Ask user to input date in YYYY/MM/DD format and check if it was a valid entry"""
-    date_unformatted = input_string(stdscr, prompt_string)
+    date_unformatted = input_string(stdscr, screen, prompt_string)
+    screen.next_need_refresh = True
     try:
         return datetime.strptime(date_unformatted, r'%Y/%m/%d').date()
     except (ValueError, IndexError, KeyboardInterrupt):
@@ -167,11 +176,15 @@ def move_cursor_to_input_position(stdscr: curses.window):
     #   and to the first character
     move_cursor_to_x_y(rows - amount_of_rows_prompt_toolkit_takes - extra_space, 0)
 
-def ask_confirmation(stdscr: curses.window, question):
+def ask_confirmation(stdscr: curses.window, screen: Screen, question):
     """Ask user confirmation for an action"""
 
     move_cursor_to_input_position(stdscr)
-    return confirm(message=question)
+    screen.next_need_refresh = True
+    try:
+        return confirm(message=question)
+    finally:
+        stdscr.keypad(True)  # This is used for us to be able to use KEY_* again
 
 
 def vim_style_exit(stdscr, screen):

@@ -15,6 +15,10 @@ class ErrorView(View):
 
     def render(self):
         """Render this view on the screen"""
+
+        if not self.screen.need_refresh:
+            return
+
         if self.error.clear_indication:
             clear_line(self.stdscr, self.screen.y_max - 2)
             self.error.clear_indication = False

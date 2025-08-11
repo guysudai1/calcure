@@ -23,6 +23,10 @@ class HelpScreenView(View):
 
     def render(self):
         """Draw the help screen"""
+
+        if not self.screen.need_refresh:
+            return
+
         self.calibrate_position()
         self.stdscr.clear()
         self.fill_background()

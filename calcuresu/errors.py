@@ -26,7 +26,8 @@ class Error():
     @property
     def has_occurred(self):
         """Has any errors occurred?"""
-        return self.buffer.getvalue() != ""
+        error_levels = ["error", "warning"]
+        return self.buffer.getvalue() != "" and any(x in self.buffer.getvalue().lower() for x in error_levels)
 
     @property
     def number_of_errors(self):

@@ -28,7 +28,9 @@ class WorkspaceManagerScreenView(View):
     
     def render(self):
         """Draw the welcome screen"""
-        self.workspaces.save_if_needed()
+
+        if not self.screen.need_refresh:
+            return
 
         self.stdscr.clear()
         self.fill_background()

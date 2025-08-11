@@ -147,10 +147,9 @@ class Config:
         self.icon_completer = IconCompleter(list(self.custom_icons.items()))
 
         # File save settings
-        self.LOCK_ACQUIRE_TIMEOUT      = ConfigItem.from_config(conf, "Parameters", "lock_acquire_timeout", ConfigType.INT, 600) # 10 minutes
-        self.LOCK_LIFETIME             = ConfigItem.from_config(conf, "Parameters", "lock_lifetime", ConfigType.INT, 580) # 9 minutes and 40 seconds
-        assert self.LOCK_LIFETIME.value < self.LOCK_ACQUIRE_TIMEOUT.value, "If the lifetime is smaller than the acquiriation timeout then we might not catch the lock"
-        self.JOURNAL_SAVE_INTERVAL     = ConfigItem.from_config(conf, "Parameters", "save_interval", ConfigType.FLOAT, 0)  # NOTE: If changing this, NFS filesystem writes might be racy
+        self.LOCK_ACQUIRE_TIMEOUT      = ConfigItem.from_config(conf, "Parameters", "lock_acquire_timeout", ConfigType.INT, 30) # try to capture lock for 30 seconds
+        self.LOCK_LIFETIME             = ConfigItem.from_config(conf, "Parameters", "lock_lifetime", ConfigType.INT, 30) # half a minute minute max for capturing lock
+        assert self.LOCK_LIFETIME.value <= self.LOCK_ACQUIRE_TIMEOUT.value, "If the lifetime is smaller than the acquiriation timeout then we might not catch the lock"
 
         # Color settings
         self.COLOR_HINTS           = ConfigItem.from_config(conf, "Colors", "color_hints", ConfigType.INT, CursesColor.WHITE.value)

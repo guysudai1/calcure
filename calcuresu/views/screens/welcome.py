@@ -17,6 +17,10 @@ class WelcomeScreenView(View):
 
     def render(self):
         """Draw the welcome screen"""
+
+        if not self.screen.need_refresh:
+            return
+
         self.calibrate_position()
         self.stdscr.clear()
         self.fill_background()

@@ -39,12 +39,14 @@ def main(stdscr) -> None:
     stdscr = curses.initscr()
     curses.noecho()
     curses.curs_set(False)
-    stdscr.timeout(10 * 1000)
+    stdscr.timeout(0)
+    stdscr.nodelay(True)
 
     initialize_colors(global_config)
 
     user_tasks: Tasks|None = None
     workspaces = Workspaces(global_config.WORKSPACES_FILE.value, global_config.WORKSPACES_LOCK_FILE.value)
+    workspaces.initialize(stdscr, screen)
 
     # Initialise screen views:
     app_view = View(stdscr, 0, 0)
@@ -63,11 +65,15 @@ def main(stdscr) -> None:
 
         # Running different screens depending on the state:
         while screen.state != AppState.EXIT:
-            stdscr.clear()
-            app_view.fill_background()
-
+            screen.need_refresh = screen.next_need_refresh
+            screen.next_need_refresh = False
+            if screen.need_refresh:
+                stdscr.clear()
+                app_view.fill_background()
+                stdscr.keypad(True)  # This is used for us to be able to use KEY_* again
+            
             # Calculate screen refresh rate:
-            curses.halfdelay(200)
+            curses.halfdelay(1)
             if user_tasks is not None and user_tasks.has_active_timer and screen.state == AppState.JOURNAL:
                 curses.halfdelay(global_config.REFRESH_INTERVAL.value * 10)
 
@@ -78,11 +84,15 @@ def main(stdscr) -> None:
                 else:
                     logging.error("Must load a workspace before going to archive. Going back to workspace manager...")
                     screen.state = AppState.WIZARD
+                    screen.next_need_refresh = True
 
                 footer_view.render()
                 error_view.render()
 
                 if user_tasks is not None and screen.state == AppState.JOURNAL:
+                    if user_tasks.reopen_shelve_if_needed_locked(stdscr, screen):
+                        continue
+
                     control_journal_screen(stdscr, screen, user_tasks)
                 else:
                     # let the error be seen
@@ -104,10 +114,14 @@ def main(stdscr) -> None:
                 else:
                     logging.error("Must load a workspace before going to archive. Going back to workspace manager...")
                     screen.state = AppState.WIZARD
+                    screen.next_need_refresh = True
                 
                 footer_view.render()
                 error_view.render()
                 if user_tasks is not None and screen.state == AppState.ARCHIVE:
+                    if user_tasks.reopen_shelve_if_needed_locked(stdscr, screen):
+                        continue
+
                     control_archive_screen(stdscr, screen, user_tasks)
                 else:
                     # let the error be seen
@@ -118,13 +132,18 @@ def main(stdscr) -> None:
                 workspaces_view.render()
                 footer_view.render()
                 error_view.render()
+                if workspaces.reopen_shelve_if_needed_locked(stdscr, screen):
+                    continue
+                
                 temp_user_tasks = control_workspaces_screen(stdscr, screen, workspaces)
                 if temp_user_tasks is not None:
                     user_tasks = temp_user_tasks
                     journal_screen_view = JournalScreenView(stdscr, 0, 0, user_tasks, screen)
                     archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
+                    screen.next_need_refresh = True
             else:
                 break
+
     except Exception as e:
         raise
     else:
