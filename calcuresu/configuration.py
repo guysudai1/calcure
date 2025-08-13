@@ -168,7 +168,7 @@ class Config:
         self.COLOR_WIP      = ConfigItem.from_config(conf, "Colors", "color_wip", ConfigType.INT, 173) 
         self.COLOR_CURRENT_MISSION    = ConfigItem.from_config(conf, "Colors", "color_current_mission", ConfigType.INT, 57)
         self.COLOR_WAITING    = ConfigItem.from_config(conf, "Colors", "color_waiting", ConfigType.INT, 230)
-        self.COLOR_DONE           = ConfigItem.from_config(conf, "Colors", "color_done", ConfigType.INT, 40)
+        self.COLOR_DONE           = ConfigItem.from_config(conf, "Colors", "color_done", ConfigType.INT, CursesColor.BRIGHT_GREEN.value)
         self.COLOR_IMPORTANCE           = ConfigItem.from_config(conf, "Colors", "color_importance", ConfigType.INT, 231)
         self.COLOR_TITLE          = ConfigItem.from_config(conf, "Colors", "color_title", ConfigType.INT, CursesColor.RED.value)
         self.COLOR_WORKSPACE          = ConfigItem.from_config(conf, "Colors", "color_workspace", ConfigType.INT, CursesColor.MAGENTA.value)
