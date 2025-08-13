@@ -24,6 +24,11 @@ class Screen:
         self.offset = 0
         self.need_refresh = True
         self.next_need_refresh = True
+        self.current_size = stdscr.getmaxyx()
+
+    @property
+    def resized(self):
+        return self.current_size != self.stdscr.getmaxyx()
         
 
     @property

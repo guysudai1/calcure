@@ -66,6 +66,10 @@ def main(stdscr) -> None:
 
         # Running different screens depending on the state:
         while screen.state != AppState.EXIT:
+            if screen.resized:
+                screen.current_size = stdscr.getmaxyx()
+                screen.next_need_refresh = True
+
             screen.need_refresh = screen.next_need_refresh
             screen.next_need_refresh = False
             if screen.need_refresh:
