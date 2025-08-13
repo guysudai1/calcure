@@ -336,6 +336,16 @@ def control_help_screen(stdscr, screen):
     handle_screen_transfer_keys(stdscr, screen, screen.key, quit_state=AppState.WIZARD)
 
 @safe_run
+def control_color_screen(stdscr, screen):
+    """Process user input on the help screen"""
+    # Getting user's input:
+    screen.key = nonblocking_getkey(stdscr)
+
+    handle_reload_keys(screen, screen.key)
+    handle_screen_transfer_keys(stdscr, screen, screen.key)
+
+
+@safe_run
 def control_welcome_screen(stdscr, screen):
     """Process user input on the welcome screen"""
     # Getting user's input:

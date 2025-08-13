@@ -24,6 +24,7 @@ from calcuresu.views.fragments.archive import ArchiveView
 from calcuresu.views.fragments.error import ErrorView
 from calcuresu.views.fragments.footer import FooterView
 from calcuresu.views.screens.archive import ArchiveScreenView
+from calcuresu.views.screens.colors import ColorScreenView
 from calcuresu.views.screens.help import HelpScreenView
 from calcuresu.views.screens.journal import JournalScreenView
 from calcuresu.views.screens.welcome import WelcomeScreenView
@@ -57,7 +58,7 @@ def main(stdscr) -> None:
     error_view = ErrorView(stdscr, 0, 0, screen)
     archive_view: ArchiveScreenView|None = None
     workspaces_view = WorkspaceManagerScreenView(stdscr, 0, 0, screen, workspaces)
-
+    color_view = ColorScreenView(stdscr, 0, 0, screen)
     try:
         # Show welcome screen on the first run:
         if global_config.is_first_run:
@@ -141,6 +142,12 @@ def main(stdscr) -> None:
                     journal_screen_view = JournalScreenView(stdscr, 0, 0, user_tasks, screen)
                     archive_view = ArchiveScreenView(stdscr, 0, 0, user_tasks, screen)
                     screen.next_need_refresh = True
+            elif screen.state == AppState.COLOR:
+                control_color_screen(stdscr, screen)
+                color_view.render()
+                footer_view.render()
+                stdscr.refresh()
+
             else:
                 break
 

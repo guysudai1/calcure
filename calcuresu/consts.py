@@ -12,6 +12,7 @@ class AppState(enum.Enum):
     WELCOME = 4
     ARCHIVE = 5
     WIZARD = 6
+    COLOR = 7
 
 class Filters(enum.Enum):
     """Possible filters"""
@@ -68,3 +69,5 @@ class CursesColor(enum.IntEnum):
     LIGHT_MAGENTA = 13
     LIGHT_CYAN = 14
     LIGHT_WHITE = 15
+
+    BRIGHT_GREEN = 40
