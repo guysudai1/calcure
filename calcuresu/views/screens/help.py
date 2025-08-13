@@ -80,13 +80,12 @@ class HelpScreenView(View):
             
 
         """
-        Workspace keybindings
+        Workspace keybindings (same X as archive keybindings)
         """
-        title_x_offset += self.MAX_BINDINGS_X_SIZE
         base_index = 0
-        self.display_line(self.y + 2, title_x_offset, TITLE_KEYS_WORKSPACE, Color.TITLE, global_config.BOLD_TITLE.value, global_config.UNDERLINED_TITLE.value)
+        self.display_line(self.y + len(KEYS_ARCHIVE) + 4 + 2, title_x_offset, TITLE_KEYS_WORKSPACE, Color.TITLE, global_config.BOLD_TITLE.value, global_config.UNDERLINED_TITLE.value)
         for index, key in enumerate(KEYS_WORKSPACE):
-            item_height = self.y + (index - base_index) + 3
+            item_height = self.y + (index - base_index) + 3 + len(KEYS_ARCHIVE) + 4
             if item_height >= self.y_max - 4:
                 # Split the GUI
                 title_x_offset += self.MAX_BINDINGS_X_SIZE
