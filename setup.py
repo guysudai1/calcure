@@ -40,9 +40,4 @@ setuptools.setup(
     ],
     packages=["calcuresu", "calcuresu.translations", "calcuresu.views", "calcuresu.views.screens", "calcuresu.views.fragments", "calcuresu.classes"],
     include_package_data=True,
-    data_files=[
-        ('share/man/man1',
-         ['calcuresu.1.gz']
-         ),
-    ],
 )
