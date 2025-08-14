@@ -32,13 +32,16 @@ class FooterView(View):
         clear_line(self.stdscr, self.screen.y_max - 1)
 
         hints = self.get_screen_state()
-
+ 
         if self.screen.state == AppState.JOURNAL:
-            hints += "   " + JOURNAL_HINT
+            keybinds = JOURNAL_HINT
         if self.screen.state == AppState.ARCHIVE:
-            hints += "   " + ARCHIVE_HINT
+            keybinds = ARCHIVE_HINT
         if self.screen.state == AppState.WIZARD:
-            hints += "   " + WORKSPACE_HINT
-        self.display_line(self.screen.y_max - 1, 0, hints, Color.HINTS)
+            keybinds = WORKSPACE_HINT
+        else:
+            keybinds = ""
+        self.display_line(self.screen.y_max - 3, (self.screen.x_max - len(keybinds)) // 2, keybinds, Color.HINTS)
+        self.display_line(self.screen.y_max - 1, (self.screen.x_max - len(hints)) // 2, hints, Color.HINTS)
         
 
