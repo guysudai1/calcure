@@ -23,7 +23,7 @@ class WorkspaceView(View):
         icon_indent = self.x + 4
         self.display_line(self.y, icon_indent, global_config.TODO_ICON.value, Color.PROMPTS)
 
-        self.display_line(self.y, icon_indent, self.workspace.workspace_path, Color.WORKSPACE)
+        self.display_line(self.y, icon_indent, str(self.workspace.workspace_path), Color.WORKSPACE)
 
 class WorkspaceManagerView(View):
     """Display the entire workspace list"""

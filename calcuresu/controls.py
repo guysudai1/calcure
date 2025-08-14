@@ -5,6 +5,7 @@ import curses
 import dbm.sqlite3
 import dbm.sqlite3
 import importlib
+from os import W_OK
 
 # Modules:
 from calcuresu.classes.task import Task
@@ -476,7 +477,12 @@ def control_workspaces_screen(stdscr: curses.window, screen: Screen, workspaces:
                 if lock_successful:      
                     workspace_path = input_path(stdscr, screen, MSG_WS_NEW_WORKSPACE, placeholder=MSG_WS_NEW_WORKSPACE_TIP)
                     if workspace_path:
-                        workspaces.add_workspace(Workspace(workspace_path))
+                        parent_directory_is_writable = workspace_path.parent.is_dir() and os.access(workspace_path.parent, W_OK)
+                        file_exists_and_is_writable = workspace_path.is_file() and os.access(workspace_path, W_OK)
+                        if file_exists_and_is_writable or parent_directory_is_writable:
+                            workspaces.add_workspace(Workspace(workspace_path))
+                        else:
+                            logging.error(f"The path given ('{workspace_path}') is not writable")
 
                     workspaces.save_if_needed_nolock()
 

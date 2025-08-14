@@ -4,6 +4,7 @@ import curses
 from datetime import datetime
 from email.errors import InvalidMultipartContentTransferEncodingDefect
 import logging
+from pathlib import Path
 import sys
 
 from prompt_toolkit.shortcuts import confirm
@@ -63,7 +64,7 @@ def input_path(stdscr: curses.window, screen: Screen, question, default="", plac
     """Ask user to input something and return it as a string"""
     kwargs.pop("completer", None)  # Remove completer if we have one
     try:
-        return input_string(stdscr, screen, question, default, placeholder, PathCompleter(expanduser=True))
+        return Path(input_string(stdscr, screen, question, default, placeholder, PathCompleter(expanduser=True)))
     finally:
         screen.next_need_refresh = True
 
