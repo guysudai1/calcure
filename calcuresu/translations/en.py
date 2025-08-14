@@ -1,10 +1,28 @@
 """English translations of the program interface"""
 
-MSG_WELCOME_1 = "Welcome to Calcuresu"
-MSG_WELCOME_2 = "Your terminal task manager!"
-MSG_WELCOME_3 = "Config and data files were created at:"
-MSG_WELCOME_4 = "For support, contribution, and additional information, visit:"
-MSG_WELCOME_5 = "Press ? to see all keybindings or any other key to continue."
+from calcuresu.colors import Color
+from calcuresu.consts import VERSION
+
+
+MSG_SITE          = "https://github.com/guysudai1/calcuresu"
+
+WELCOME_MESSAGES = [
+    (f"Welcome to Calcuresu {VERSION} - Terminal Task Manager", Color.ACTIVE_PANE),
+    ("Your configuration file can be found inside ~/.config/calcuresu/config.ini", Color.ACTIVE_PANE),
+    (None, None),
+    (None, None),
+    ("Usage:", Color.TITLE),
+    ("1. Create a task list file - Press 'a' (WIZARD SCREEN)", Color.HINTS),
+    ("2. Load the created task list - Press 'l' (WIZARD SCREEN)", Color.HINTS),
+    ("3. Use the journal/archive for the task list", Color.HINTS),
+    (None, None),
+    (None, None),
+    ("For support, contribution, and additional information, visit:", Color.HINTS),
+    (MSG_SITE, Color.HINTS),
+    (None, None),
+    (None, None),
+    ("Press ? to see all keybindings or any other key to continue.", Color.TITLE),
+]
 
 TITLE_KEYS_GENERAL = "GENERAL KEYBINDINGS"
 TITLE_KEYS_WORKSPACE = "WORKSPACE KEYBINDINGS"
@@ -63,7 +81,6 @@ KEYS_JOURNAL = {
 
 MSG_NAME          = "CALCURE"
 MSG_INFO          = "For more information, visit:"
-MSG_SITE          = "https://github.com/guysudai1/calcuresu"
 MSG_EXIT          = "Really exit? "
 
 MSG_EVENT_HIGH    = "Mark as high priority event number: "

@@ -11,7 +11,6 @@ from calcuresu.colors import Color
 from calcuresu.consts import VERSION
 from calcuresu.data import Workspaces
 from calcuresu.screen import Screen
-from calcuresu.translations.en import MSG_SITE, MSG_TS_NO_WORKSPACES, MSG_WELCOME_1, MSG_WELCOME_2, MSG_WELCOME_3, MSG_WELCOME_4, MSG_WELCOME_5
 from calcuresu.singletons import global_config
 from calcuresu.singletons import error
 from calcuresu.views.fragments.header import HeaderView

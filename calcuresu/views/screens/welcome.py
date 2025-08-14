@@ -1,7 +1,7 @@
 from calcuresu.base_view import View
 from calcuresu.colors import Color
 from calcuresu.consts import VERSION
-from calcuresu.translations.en import MSG_SITE, MSG_WELCOME_1, MSG_WELCOME_2, MSG_WELCOME_3, MSG_WELCOME_4, MSG_WELCOME_5
+from calcuresu.translations.en import WELCOME_MESSAGES
 from calcuresu.singletons import global_config
 
 class WelcomeScreenView(View):
@@ -25,16 +25,10 @@ class WelcomeScreenView(View):
         self.stdscr.clear()
         self.fill_background()
 
-        if self.x_max < len(MSG_WELCOME_4)+2 or self.y_max < 12:
-            self.display_line(0, 0, "Welcome!", Color.ACTIVE_PANE)
-            return
-
         d_x = self.x_max//2
         d_y = self.y_max//2 - 5
 
-        self.display_line(d_y, d_x - len(MSG_WELCOME_1+VERSION+" ")//2, f"{MSG_WELCOME_1} {VERSION}", Color.ACTIVE_PANE)
-        self.display_line(d_y + 1, d_x - len(MSG_WELCOME_2)//2, MSG_WELCOME_2, Color.HINTS)
-        self.display_line(d_y + 6, d_x - len(MSG_WELCOME_4)//2, MSG_WELCOME_4, Color.HINTS)
-        self.display_line(d_y + 7, d_x - len(MSG_SITE)//2, MSG_SITE, Color.TITLE)
-        self.display_line(d_y + 9, d_x - len(MSG_WELCOME_5)//2, MSG_WELCOME_5, Color.HINTS)
-        
+        for message, color in WELCOME_MESSAGES:
+            if message is not None:
+                self.display_line(d_y, d_x - len(message) // 2, message, color)
+            d_y += 1
