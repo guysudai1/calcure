@@ -79,7 +79,7 @@ KEYS_JOURNAL = {
         "   ↓   ": "Go 1 task down",
 }
 
-MSG_NAME          = "CALCURE"
+MSG_NAME          = "CALCURESU"
 MSG_INFO          = "For more information, visit:"
 MSG_EXIT          = "Really exit? "
 
