@@ -413,7 +413,7 @@ class Tasks(Shelveable):
 
     def edit_and_display_extra_info(self, task: Task, stdscr: window):
         move_cursor_to_x_y(0, 0)
-        task.extra_info = prompt_toolkit.prompt(multiline=True, wrap_lines=True, default=task.extra_info, bottom_toolbar="Use MOD+Enter to save the note")
+        task.extra_info = prompt_toolkit.prompt(multiline=True, wrap_lines=True, default=task.extra_info, bottom_toolbar="Use ALTp+Enter to save the note")
         stdscr.keypad(True)
         self.changed = True
 
@@ -445,11 +445,8 @@ class Tasks(Shelveable):
         while nodes_to_go_over:
             current_node = nodes_to_go_over.pop(0)
             
-            if hide_collapsed and current_node.collapse:
-                flattened_list.append(current_node)    
-                continue
-
-            nodes_to_go_over = current_node.children + nodes_to_go_over
+            if not (hide_collapsed and current_node.collapse):
+                nodes_to_go_over = current_node.children + nodes_to_go_over
             
             if hide_archived and current_node.is_archived:
                 continue 
