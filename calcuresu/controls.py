@@ -13,10 +13,7 @@ from calcuresu.consts import AppState, Status
 from calcuresu.data import *
 from calcuresu.data import Tasks
 from calcuresu.dialogues import *
-from calcuresu.configuration import Config
 from calcuresu.screen import Screen
-
-global_config = Config()
 
 # Language:
 from calcuresu.translations.en import *
